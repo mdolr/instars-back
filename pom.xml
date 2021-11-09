@@ -8,6 +8,10 @@
     <groupId>com.tinyinsta</groupId>
     <artifactId>tinyinsta-web</artifactId>
 
+    <prerequisites>
+        <maven>3.1.0</maven>
+    </prerequisites>
+
     <properties>
         <maven.compiler.source>1.7</maven.compiler.source>
         <maven.compiler.target>1.7</maven.compiler.target>
@@ -56,9 +60,7 @@
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>appengine-maven-plugin</artifactId>
                 <version>1.3.1</version>
-                <configuration>
-                    <!-- deploy configuration -->
-                </configuration>
+                
             </plugin>
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
@@ -66,7 +68,7 @@
                 <version>1.0.0</version>
                 <configuration>
                     <!-- plugin configuration -->
-                    <hostname>YOUR-PROJECT-ID.appspot.com</hostname>
+                    <hostname>tinyinsta-web.appspot.com</hostname>
                 </configuration>
             </plugin>
             <plugin>
