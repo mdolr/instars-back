@@ -82,4 +82,28 @@ public class Pictures {
             }
         }
     }
+
+    @ApiMethod(name = "pictures", httpMethod = "put", path = "pictures/{id}/like")
+    public Entity likePicture(
+        @Named("id") String id
+    ) throws EntityNotFoundException {
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        Transaction txn = datastore.beginTransaction();
+        try {
+            Entity e=new Entity("Picture",id);
+
+            Entity e1=datastore.get(e.getKey());
+            long likes = (long) e1.getProperty("likes");
+            e1.setProperty("likes", likes+1);
+            datastore.put(e1);
+
+            txn.commit();
+
+            return e1;
+        } finally {
+            if (txn.isActive()) {
+                txn.rollback();
+            }
+        }
+    }
 }
