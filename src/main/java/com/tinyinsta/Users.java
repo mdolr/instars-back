@@ -10,7 +10,7 @@ import java.util.ArrayList;
 import javax.inject.Named;
 
 @Api(
-    name = "users",
+    name = "tinyinsta",
     version = "v1",
     scopes = {Constants.EMAIL_SCOPE},
     clientIds = {Constants.WEB_CLIENT_ID}
