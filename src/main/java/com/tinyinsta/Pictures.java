@@ -4,9 +4,14 @@ import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.appengine.api.datastore.*;
 
+import com.google.cloud.storage.*;
+
 import javax.annotation.Nullable;
 import javax.inject.Named;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
@@ -51,11 +56,24 @@ public class Pictures {
     }
 
     @ApiMethod(name = "pictures", httpMethod = "post", path = "pictures")
-    public Entity post(
-        @Named("image") String image,
+    public Entity uploadPicture(
+        @Named("url") String url,
         @Named("owner") String owner,
         @Named("title") String title
     ) {
+        String projectId = "tinyinsta-web";
+        String bucketName = "pictures_test789";
+        String objectName = "picture"+owner+title;
+
+        Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
+        BlobId blobId = BlobId.of(bucketName, objectName);
+        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
+        try {
+            storage.create(blobInfo, Files.readAllBytes(Paths.get(url)));//TODO: L'url ne fonctionne pas
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Transaction txn = datastore.beginTransaction();
         try {
@@ -65,7 +83,7 @@ public class Pictures {
             String id = date_formatted + "_" + owner;
 
             Entity e = new Entity("Picture", id);
-            e.setProperty("image", image);
+            e.setProperty("url", url);//TODO: Change url to store url
             e.setProperty("owner", owner);
             e.setProperty("title", title);
             e.setProperty("date", date_formatted);
