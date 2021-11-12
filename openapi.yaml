@@ -1,0 +1,9 @@
+securityDefinitions:
+  google_id_token:
+    authorizationUrl: ""
+    flow: "implicit"
+    type: "oauth2"
+    x-google-issuer: "https://accounts.google.com"
+    x-google-jwks_uri: "https://www.googleapis.com/oauth2/v3/certs"
+    # Optional. Replace YOUR-CLIENT-ID with your client ID
+    x-google-audiences: "284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com"
