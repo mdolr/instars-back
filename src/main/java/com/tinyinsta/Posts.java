@@ -4,17 +4,23 @@ import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.appengine.api.datastore.*;
 
+import com.google.auth.Credentials;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.*;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
 
+import java.io.FileInputStream;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.net.URL;
+
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 @Api(
     name = "tinyinsta",
@@ -24,7 +30,7 @@ import java.util.List;
 )
 public class Posts {
 
-    @ApiMethod(name = "posts", httpMethod = "get", path = "posts/{id}")
+    @ApiMethod(name = "getIndividual", httpMethod = "get", path = "posts/{id}")
     public Entity getIndividual(
         @Named("id") String id
     ) throws EntityNotFoundException {
@@ -37,7 +43,7 @@ public class Posts {
         return e1;
     }
 
-    @ApiMethod(name = "posts", httpMethod = "get", path = "posts")
+    @ApiMethod(name = "getAll", httpMethod = "get", path = "posts")
     public List<Entity> getAll(
         @Nullable @Named("owner") String owner
     ) {
@@ -55,26 +61,47 @@ public class Posts {
         return result;
     }
 
-    @ApiMethod(name = "posts", httpMethod = "post", path = "posts")
+    @ApiMethod(name = "requestprotectedURL", httpMethod = "get", path = "protectedURL")
+    public URL requestprotectedURL(
+        @Named("fileName") String fileName
+    ){
+        String projectId = "tinyinsta-web";
+        String bucketName = "posts_test789";
+
+        Credentials credentials = null;
+        try {
+            credentials = GoogleCredentials.fromStream(new FileInputStream("src/cred.json"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Storage storage = StorageOptions.newBuilder().setProjectId(projectId).setCredentials(credentials).build().getService();
+
+        // Define Resource
+        BlobInfo blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, fileName)).build();
+
+        // Generate Signed URL
+        Map<String, String> extensionHeaders = new HashMap<>();
+        extensionHeaders.put("Content-Type", "application/octet-stream");
+
+        URL url =
+                storage.signUrl(
+                        blobInfo,
+                        15,
+                        TimeUnit.MINUTES,
+                        Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
+                        Storage.SignUrlOption.withExtHeaders(extensionHeaders),
+                        Storage.SignUrlOption.withV4Signature());
+        return url;
+    }
+
+    @ApiMethod(name = "uploadPost", httpMethod = "post", path = "posts")
     public Entity uploadPost(
         @Named("url") String url,
         @Named("owner") String owner,
         @Named("title") String title,
         @Named("description") String description
     ) {
-        String projectId = "tinyinsta-web";
-        String bucketName = "posts_test789";
-        String objectName = "posts"+owner+title;
-
-        Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
-        BlobId blobId = BlobId.of(bucketName, objectName);
-        BlobInfo blobInfo = BlobInfo.newBuilder(blobId).build();
-        try {
-            storage.create(blobInfo, Files.readAllBytes(Paths.get(url)));//TODO: L'url ne fonctionne pas
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Transaction txn = datastore.beginTransaction();
         try {
@@ -104,7 +131,7 @@ public class Posts {
         }
     }
 
-    @ApiMethod(name = "posts", httpMethod = "put", path = "posts/{id}/like")
+    @ApiMethod(name = "likePost", httpMethod = "put", path = "posts/{id}/like")
     public Entity likePost(
         @Named("id") String id
     ) throws EntityNotFoundException {
