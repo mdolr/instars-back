@@ -14,7 +14,7 @@
         <!-- End of Endpoints Frameworks v2.0 -->
         <init-param>
             <param-name>services</param-name>
-            <param-value>com.tinyinsta.Pictures, com.tinyinsta.Users, com.tinyinsta.Greetings</param-value>
+            <param-value>com.tinyinsta.Posts, com.tinyinsta.Users, com.tinyinsta.Greetings</param-value>
         </init-param>
         <init-param>
             <param-name>restricted</param-name>

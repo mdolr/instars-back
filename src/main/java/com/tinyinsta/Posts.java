@@ -22,28 +22,28 @@ import java.util.List;
     scopes = {Constants.EMAIL_SCOPE},
     clientIds = {Constants.WEB_CLIENT_ID}
 )
-public class Pictures {
+public class Posts {
 
-    @ApiMethod(name = "pictures", httpMethod = "get", path = "pictures/{id}")
+    @ApiMethod(name = "posts", httpMethod = "get", path = "posts/{id}")
     public Entity getIndividual(
         @Named("id") String id
     ) throws EntityNotFoundException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-        Entity e=new Entity("Picture",id);
+        Entity e=new Entity("Post",id);
 
         Entity e1=datastore.get(e.getKey());
 
         return e1;
     }
 
-    @ApiMethod(name = "pictures", httpMethod = "get", path = "pictures")
+    @ApiMethod(name = "posts", httpMethod = "get", path = "posts")
     public List<Entity> getAll(
         @Nullable @Named("owner") String owner
     ) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-        Query q = new Query("Picture");
+        Query q = new Query("Post");
 
         if(owner!=null) {
             q.setFilter(new Query.FilterPredicate("owner", Query.FilterOperator.EQUAL, owner));
@@ -55,15 +55,16 @@ public class Pictures {
         return result;
     }
 
-    @ApiMethod(name = "pictures", httpMethod = "post", path = "pictures")
-    public Entity uploadPicture(
+    @ApiMethod(name = "posts", httpMethod = "post", path = "posts")
+    public Entity uploadPost(
         @Named("url") String url,
         @Named("owner") String owner,
-        @Named("title") String title
+        @Named("title") String title,
+        @Named("description") String description
     ) {
         String projectId = "tinyinsta-web";
-        String bucketName = "pictures_test789";
-        String objectName = "picture"+owner+title;
+        String bucketName = "posts_test789";
+        String objectName = "posts"+owner+title;
 
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build().getService();
         BlobId blobId = BlobId.of(bucketName, objectName);
@@ -79,13 +80,15 @@ public class Pictures {
         try {
             Date date = new Date();
             String date_formatted = new SimpleDateFormat("dd-MM-yyyy_HH:mm:ss").format(date);
+            String date_inverted_timestamp = new SimpleDateFormat("ssmmHHddMMyyyy").format(date);
 
-            String id = date_formatted + "_" + owner;
+            String id = date_inverted_timestamp + "_" + owner;
 
-            Entity e = new Entity("Picture", id);
+            Entity e = new Entity("Post", id);
             e.setProperty("url", url);//TODO: Change url to store url
             e.setProperty("owner", owner);
             e.setProperty("title", title);
+            e.setProperty("description", description);
             e.setProperty("date", date_formatted);
             e.setProperty("likes", 0);
 
@@ -101,14 +104,14 @@ public class Pictures {
         }
     }
 
-    @ApiMethod(name = "pictures", httpMethod = "put", path = "pictures/{id}/like")
-    public Entity likePicture(
+    @ApiMethod(name = "posts", httpMethod = "put", path = "posts/{id}/like")
+    public Entity likePost(
         @Named("id") String id
     ) throws EntityNotFoundException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Transaction txn = datastore.beginTransaction();
         try {
-            Entity e=new Entity("Picture",id);
+            Entity e=new Entity("Post",id);
 
             Entity e1=datastore.get(e.getKey());
             long likes = (long) e1.getProperty("likes");
