@@ -2,3 +2,7 @@ target
 .DS_Store
 *.iml
 .idea
+.settings
+.classpath
+.project
+.factorypath
