@@ -143,5 +143,23 @@ public class Users {
     // Update each parameter
 
     return user;
-  }    
+  }
+
+
+  // A route to get an user by its handle
+  @ApiMethod(name = "handle",
+              httpMethod = "get",
+              path = "users/handle/{handle}")
+  public Entity getByHandle(@Named("handle") String handle) throws NotFoundException, EntityNotFoundException {
+    // Query the datastore to get the user by its handle
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    Query query = new Query("User").setFilter(new Query.FilterPredicate("handle", Query.FilterOperator.EQUAL, handle));
+    Entity user = datastore.prepare(query).asSingleEntity();
+
+    if(user == null) {
+      throw new NotFoundException("User not found");
+    }
+
+    return user;
+  }
 }
