@@ -27,6 +27,14 @@ import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 
+import com.google.api.server.spi.response.BadRequestException;
+import com.google.api.server.spi.response.UnauthorizedException;
+import com.google.api.server.spi.response.ForbiddenException;
+import com.google.api.server.spi.response.NotFoundException;
+import com.google.api.server.spi.response.ConflictException;
+import com.google.api.server.spi.response.InternalServerErrorException;
+import com.google.api.server.spi.response.ServiceUnavailableException;
+
 
 @Api(
     name = "tinyinsta",
@@ -40,9 +48,10 @@ public class Users {
               path = "users/me",
               clientIds={"284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com"},
               audiences={"284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com"})
-  public User getUserEmail(User user)  {
+  public User getSelf(User user) throws UnauthorizedException {
+    // If the user is not logged in : throw an error or redirect to the login page
     if (user == null) {
-      return null;
+      throw new UnauthorizedException("Authorization required");
     }
   
     return user;
