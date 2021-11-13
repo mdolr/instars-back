@@ -86,7 +86,7 @@ public class Users {
       newUser.setProperty("email", reqUser.getEmail());
       newUser.setProperty("handle", reqUser.getEmail().split("@")[0]);
       newUser.setProperty("name", reqUser.getEmail().split("@")[0]);
-      newUser.setProperty("picture", "https://thispersondoesnotexist.com/"); // set link to a default picture
+      newUser.setProperty("pictureURL", "https://thispersondoesnotexist.com/"); // set link to a default picture
       newUser.setProperty("createdAt", new Date());
       newUser.setProperty("updatedAt", new Date());
 
@@ -109,4 +109,39 @@ public class Users {
       return newUser;
     }
   }
+
+  @ApiMethod(name = "me",
+              httpMethod = "put",
+              path = "users/me",
+              clientIds={"284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com"},
+              audiences={"284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com"},
+              scopes={"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"})
+  public Entity updateSelf(User reqUser, Map<String, Object> reqBody) throws UnauthorizedException, EntityNotFoundException {
+    // If the user is not logged in : throw an error or redirect to the login page
+    if (reqUser == null) {
+      throw new UnauthorizedException("Authorization required");
+    }
+
+    // Query the datastore to get the user by its ID
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+    Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
+
+    user.setProperty("updatedAt", new Date()); // Update the last updated date
+
+    // Only allow update of certains variables
+    String[] mutableVariables = {"name", "handle", "email", "pictureURL"};
+    
+    for (Map.Entry<String, Object> entry : reqBody.entrySet()) {
+      // TODO: Make sure the key matches one of the mutable variables
+      // String key = entry.getKey();
+
+      //if(Array.stream(mutableVariables).anyMatch(key::equals)) {
+        user.setProperty(entry.getKey(), entry.getValue()); // Update the property
+      //}
+    }
+    
+    // Update each parameter
+
+    return user;
+  }    
 }
