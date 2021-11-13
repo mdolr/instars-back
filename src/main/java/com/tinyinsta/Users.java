@@ -21,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
 
 import com.google.api.server.spi.auth.common.User;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
@@ -47,13 +48,65 @@ public class Users {
               httpMethod = "get",
               path = "users/me",
               clientIds={"284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com"},
-              audiences={"284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com"})
-  public User getSelf(User user) throws UnauthorizedException {
+              audiences={"284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com"},
+              scopes={"https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile"})
+  public Entity getSelf(User reqUser) throws UnauthorizedException, EntityNotFoundException {
     // If the user is not logged in : throw an error or redirect to the login page
-    if (user == null) {
+    if (reqUser == null) {
       throw new UnauthorizedException("Authorization required");
     }
-  
-    return user;
+
+    // Query the datastore to get the user by its ID
+    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+    // If the user is already in the datastore
+    try {
+      // Get entity by key id
+      Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
+      return user;
+    }
+
+    // If the user isn't already in the datastore
+    catch (EntityNotFoundException e) {
+      // Create an user entity with the following properties:
+      // - id : the user id
+      // - email : the user email
+      // - name : the user name
+      // - handle : the user account handle (@...)
+      // - picture : the user picture
+      // - createdAt : the date of creation
+      // - updatedAt : the date of last update
+      // - followers : An UserFollowers entity which contains multiple lists of followers
+      // - following : An UserFollowings entity which contains multiple lists of followings
+      
+      // Create the user entity
+      Entity newUser = new Entity("User", reqUser.getId());
+
+      // Set the user properties
+      newUser.setProperty("email", reqUser.getEmail());
+      newUser.setProperty("handle", reqUser.getEmail().split("@")[0]);
+      newUser.setProperty("name", reqUser.getEmail().split("@")[0]);
+      newUser.setProperty("picture", "https://thispersondoesnotexist.com/"); // set link to a default picture
+      newUser.setProperty("createdAt", new Date());
+      newUser.setProperty("updatedAt", new Date());
+
+      // Create the UserFollowers entity
+      Entity newUserFollowers = new Entity("UserFollowers", reqUser.getId());
+      newUserFollowers.setProperty("followersBatch-1", new ArrayList<String>());
+      newUserFollowers.setProperty("followersBatch-2", new ArrayList<String>());
+      newUserFollowers.setProperty("followersBatch-3", new ArrayList<String>());
+
+      // Create the UserFollowings entity
+      Entity newUserFollowings = new Entity("UserFollowings", reqUser.getId());
+      newUserFollowings.setProperty("followingsBatch-1", new ArrayList<String>());
+
+      // Put the entities in the datastore
+      datastore.put(newUser);
+      datastore.put(newUserFollowers);
+      datastore.put(newUserFollowings);
+
+      // Return the user
+      return newUser;
+    }
   }
 }
