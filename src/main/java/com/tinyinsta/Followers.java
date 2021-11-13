@@ -49,7 +49,7 @@ public class Followers {
 
         q.setFilter(new Query.FilterPredicate("userId", Query.FilterOperator.EQUAL, userId));
         q.setFilter(new Query.setLimit(limit));
-        q.setFilter(new Query.setProjection("followers"))
+        q.setFilter(new Query.setProjection("followers"));
 
         PreparedQuery pq = datastore.prepare(q);
         List<Entity> result = pq.asList(FetchOptions.Builder.withDefaults());
@@ -78,7 +78,7 @@ public class Followers {
 
         q.setFilter(new Query.FilterPredicate("userId", Query.FilterOperator.EQUAL, userId));
         q.setFilter(new Query.setLimit(limit));
-        q.setFilter(new Query.setProjection("followings"))
+        q.setFilter(new Query.setProjection("followings"));
         
         PreparedQuery pq = datastore.prepare(q);
         List<Entity> result = pq.asList(FetchOptions.Builder.withDefaults());
@@ -92,7 +92,7 @@ public class Followers {
         @Named("newFollow") String newFollow
     ) throws BadRequestException
     {
-        if (userId == null or newFollow){
+        if ((userId == null) || newFollow){
             throw new BadRequestException("A necessary parameter is unset");
         }
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -100,7 +100,7 @@ public class Followers {
         try{
             txn.commit();
         }
-        catch{
+        catch(Exception e){
             
         }
         finally{
@@ -124,11 +124,10 @@ public class Followers {
         }
         Transaction txn = datastore.beginTransaction();
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        // No transaction necessary
         try{
             txn.commit();
         }
-        catch{
+        catch(Exception e){
 
         }
         finally{
