@@ -8,7 +8,7 @@ public class Constants {
   public static final String ANDROID_CLIENT_ID = "replace this with your Android client ID";
   public static final String IOS_CLIENT_ID = "replace this with your iOS client ID";
   public static final String ANDROID_AUDIENCE = WEB_CLIENT_ID;
-  public static final String GOOGLE_APPLICATION_CREDENTIALS = "00e6eeba362f92897e6741f5f1c967870ed10e32";
+  public static final int LIKES_MAX_BUCKETS_NUMBER = 5;
 
 
   public static final String EMAIL_SCOPE = "https://www.googleapis.com/auth/userinfo.email";

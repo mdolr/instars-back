@@ -29,11 +29,9 @@ public class Posts {
     public Entity getIndividual(@Named("id") String id) throws EntityNotFoundException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-        Entity e = new Entity("Post", id);
+        Entity post = datastore.get(KeyFactory.createKey("Post", id));
 
-        Entity e1 = datastore.get(e.getKey());
-
-        return e1;
+        return post;
     }
 
     @ApiMethod(name = "getAll", httpMethod = "get", path = "posts")
@@ -80,53 +78,37 @@ public class Posts {
     }
 
     @ApiMethod(name = "uploadPost", httpMethod = "post", path = "posts")
-    public Entity uploadPost(@Named("url") String url, @Named("owner") String owner, @Named("title") String title,
-            @Named("description") String description) {
+    public Entity uploadPost(
+            @Named("url") String url,
+            @Named("owner") String owner,
+            @Named("title") String title,
+            @Named("description") String description
+    ) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Transaction txn = datastore.beginTransaction();
         try {
             Date date = new Date();
-            String date_formatted = new SimpleDateFormat("dd-MM-yyyy_HH:mm:ss").format(date);
-            String date_inverted_timestamp = new SimpleDateFormat("ssmmHHddMMyyyy").format(date);
+            String date_timestamp = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(date);
+            String ownerId = "666"; //TODO Remplacer par ID utilisateur de façon à répartir l'écriture sur les différents buckets
+            Key keyPosts = KeyFactory.createKey("Post", ownerId + "_" + date_timestamp + "_" + owner);
 
-            String id = date_inverted_timestamp + "_" + owner;
-
-            Entity e = new Entity("Post", id);
+            Entity e = new Entity(keyPosts);
             e.setProperty("url", url);// TODO: Change url to store url
             e.setProperty("owner", owner);
             e.setProperty("title", title);
             e.setProperty("description", description);
-            e.setProperty("date", date_formatted);
-            e.setProperty("createdAt", new Date());
-            e.setProperty("likes", 0);
+            e.setProperty("createdAt", date_timestamp);
+
+            int nbBuckets = Constants.LIKES_MAX_BUCKETS_NUMBER;
+            for (int i = 1; i <= nbBuckets; i++) {
+                new Likes().createEntity(String.valueOf(i), keyPosts);
+            }
 
             datastore.put(e);
 
             txn.commit();
 
             return e;
-        } finally {
-            if (txn.isActive()) {
-                txn.rollback();
-            }
-        }
-    }
-
-    @ApiMethod(name = "likePost", httpMethod = "put", path = "posts/{id}/like")
-    public Entity likePost(@Named("id") String id) throws EntityNotFoundException {
-        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-        Transaction txn = datastore.beginTransaction();
-        try {
-            Entity e = new Entity("Post", id);
-
-            Entity e1 = datastore.get(e.getKey());
-            long likes = (long) e1.getProperty("likes");
-            e1.setProperty("likes", likes + 1);
-            datastore.put(e1);
-
-            txn.commit();
-
-            return e1;
         } finally {
             if (txn.isActive()) {
                 txn.rollback();
