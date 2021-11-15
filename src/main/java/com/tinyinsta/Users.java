@@ -85,18 +85,32 @@ public class Users {
       newUser.setProperty("updatedAt", new Date());
 
       // Create the UserFollowers entity
-      Entity newUserFollowers = new Entity("UserFollowers", reqUser.getId());
-      newUserFollowers.setProperty("followersBatch-1", new ArrayList<String>());
-      newUserFollowers.setProperty("followersBatch-2", new ArrayList<String>());
-      newUserFollowers.setProperty("followersBatch-3", new ArrayList<String>());
+      
+      // A for loop that loops 3 times
+      for (int i = 0; i < 3; i++) {
+        // Create the UserFollowers entity
+        Entity userFollowers = new Entity("UserFollowers", newUser.getKey());
+        
+        // The user's first follower is itself so it can see its own posts in its timeline
+        if(i == 0) {
+          ArrayList<String> list = new ArrayList<String>();
+          list.add(reqUser.getId());
+          
+          userFollowers.setProperty("batch", list);
+        } else {
+          userFollowers.setProperty("batch", new ArrayList<String>());
+        }
+
+        // Put the UserFollowers entity in the datastore
+        datastore.put(userFollowers);
+      }
 
       // Create the UserFollowings entity
-      Entity newUserFollowings = new Entity("UserFollowings", reqUser.getId());
-      newUserFollowings.setProperty("followingsBatch-1", new ArrayList<String>());
+      Entity newUserFollowings = new Entity("UserFollowings", newUser.getKey());
+      newUserFollowings.setProperty("batch", new ArrayList<String>());
 
       // Put the entities in the datastore
       datastore.put(newUser);
-      datastore.put(newUserFollowers);
       datastore.put(newUserFollowings);
 
       // Return the user
