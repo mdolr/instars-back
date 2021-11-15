@@ -148,6 +148,7 @@ public class Users {
     }
 
     // Update each parameter
+    datastore.put(user);
 
     return user;
   }
