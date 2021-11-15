@@ -165,6 +165,9 @@ public class Users {
       throw new NotFoundException("User not found");
     }
 
+    // Remove sensitive data before returning the user (only in the response do not update the datastore)
+    user.removeProperty("email");
+
     return user;
   }
 
