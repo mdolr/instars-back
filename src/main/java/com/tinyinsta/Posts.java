@@ -25,8 +25,8 @@ import java.util.concurrent.TimeUnit;
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Posts {
 
-    @ApiMethod(name = "getIndividual", httpMethod = "get", path = "posts/{id}")
-    public Entity getIndividual(@Named("id") String id) throws EntityNotFoundException {
+    @ApiMethod(name = "posts.getOne", httpMethod = "get", path = "posts/{id}")
+    public Entity getOne(@Named("id") String id) throws EntityNotFoundException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         Entity post = datastore.get(KeyFactory.createKey("Post", id));
@@ -34,7 +34,7 @@ public class Posts {
         return post;
     }
 
-    @ApiMethod(name = "getAll", httpMethod = "get", path = "posts")
+    @ApiMethod(name = "posts.getAll", httpMethod = "get", path = "posts")
     public List<Entity> getAll(@Nullable @Named("owner") String owner) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
@@ -50,8 +50,8 @@ public class Posts {
         return result;
     }
 
-    @ApiMethod(name = "requestprotectedURL", httpMethod = "get", path = "protectedURL")
-    public URL requestprotectedURL(@Named("fileName") String fileName) {
+    @ApiMethod(name = "posts.requestSignedURL", httpMethod = "get", path = "signedURL")
+    public URL requestSignedURL(@Named("fileName") String fileName) {
         String projectId = "tinyinsta-web";
         String bucketName = "posts_test789";
 
@@ -77,7 +77,7 @@ public class Posts {
         return url;
     }
 
-    @ApiMethod(name = "uploadPost", httpMethod = "post", path = "posts")
+    @ApiMethod(name = "posts.uploadPost", httpMethod = "post", path = "posts")
     public Entity uploadPost(
             @Named("url") String url,
             @Named("owner") String owner,
@@ -90,18 +90,18 @@ public class Posts {
             Date date = new Date();
             String date_timestamp = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(date);
             String ownerId = "666"; //TODO Remplacer par ID utilisateur de façon à répartir l'écriture sur les différents buckets
-            Key keyPosts = KeyFactory.createKey("Post", ownerId + "_" + date_timestamp + "_" + owner);
+            Key postKey = KeyFactory.createKey("Post", ownerId + "_" + date_timestamp);
 
-            Entity e = new Entity(keyPosts);
+            Entity e = new Entity(postKey);
             e.setProperty("url", url);// TODO: Change url to store url
-            e.setProperty("owner", owner);
+            e.setProperty("owner", ownerId);
             e.setProperty("title", title);
             e.setProperty("description", description);
             e.setProperty("createdAt", date_timestamp);
 
             int nbBuckets = Constants.LIKES_MAX_BUCKETS_NUMBER;
             for (int i = 1; i <= nbBuckets; i++) {
-                new Likes().createEntity(String.valueOf(i), keyPosts);
+                new Likes().createEntity(String.valueOf(i), postKey);
             }
 
             datastore.put(e);
