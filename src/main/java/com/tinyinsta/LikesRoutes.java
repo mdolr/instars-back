@@ -9,20 +9,6 @@ import java.util.List;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class LikesRoutes {
-
-    @ApiMethod(name = "likes.getLikes", httpMethod = "get", path = "posts/{id}/likes")
-    public List<Entity> getLikes(@Named("id") String id) {
-        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-
-        //Récupérer les entités "Like" dont le parent est un id de "Post"
-        Query q = new Query("Like").setAncestor(KeyFactory.createKey("Post", id));
-
-        PreparedQuery pq = datastore.prepare(q);
-        List<Entity> result = pq.asList(FetchOptions.Builder.withDefaults());
-        //TODO: Renvoyer un total plutôt qu'une liste d'entités?
-        return result;
-    }
-
     @ApiMethod(name = "likes.updateLikes", httpMethod = "put", path = "posts/{id}/likes")
     public Entity updateLikes(@Named("id") String id) throws EntityNotFoundException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();

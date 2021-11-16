@@ -90,7 +90,7 @@ public class Users {
       // A for loop that loops 3 times
       for (int i = 0; i < 3; i++) {
         // Create the UserFollowers entity
-        Entity userFollowers = new Entity("UserFollowers", newUser.getKey());
+        Entity userFollowers = new Entity("UserFollower", newUser.getKey());
         
         // The user's first follower is itself so it can see its own posts in its timeline
         if(i == 0) {
@@ -107,7 +107,7 @@ public class Users {
       }
 
       // Create the UserFollowings entity
-      Entity newUserFollowings = new Entity("UserFollowings", newUser.getKey());
+      Entity newUserFollowings = new Entity("UserFollowing", newUser.getKey());
       newUserFollowings.setProperty("batch", new ArrayList<String>());
 
       // Put the entities in the datastore

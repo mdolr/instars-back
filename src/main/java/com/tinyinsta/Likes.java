@@ -1,7 +1,11 @@
 package com.tinyinsta;
 
 
+import com.google.api.server.spi.config.ApiMethod;
 import com.google.appengine.api.datastore.*;
+
+import javax.inject.Named;
+import java.util.List;
 
 public class Likes {
 
@@ -12,5 +16,17 @@ public class Likes {
         likes.setProperty("count", 0);
         likes.setProperty("likers", 0);
         datastore.put(likes);
+    }
+
+    public List<Entity> getLikes(String id) {
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+        //Récupérer les entités "Like" dont le parent est un id de "Post"
+        Query q = new Query("Like").setAncestor(KeyFactory.createKey("Post", id));
+
+        PreparedQuery pq = datastore.prepare(q);
+        List<Entity> result = pq.asList(FetchOptions.Builder.withDefaults());
+        //TODO: Renvoyer un total plutôt qu'une liste d'entités?
+        return result;
     }
 }

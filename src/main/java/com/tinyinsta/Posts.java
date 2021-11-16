@@ -113,6 +113,17 @@ public class Posts {
             e.setProperty("description", description);
             e.setProperty("createdAt", date_timestamp);
 
+            Query q = new Query("UserFollower").setAncestor(user.getKey());
+
+            PreparedQuery pq = datastore.prepare(q);
+            List<Entity> followers = pq.asList(FetchOptions.Builder.withDefaults());
+
+            for(Entity follower : followers) {
+                Entity receivers = new Entity("PostReceiver", postKey);
+                receivers.setProperty("batch", follower.getProperty("batch"));
+                datastore.put(receivers);
+            } //TODO:
+
             int nbBuckets = Constants.LIKES_MAX_BUCKETS_NUMBER;
             for (int i = 1; i <= nbBuckets; i++) {
                 new Likes().createEntity(String.valueOf(i), postKey);
