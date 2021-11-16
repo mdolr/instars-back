@@ -50,6 +50,7 @@ public class Follows {
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     
+    
     // First we verify that our user exists
     Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
 
@@ -68,38 +69,53 @@ public class Follows {
     if(existenceResults.size() > 0) {
       throw new ConflictException("You are already following this user");
     }
+    
+    Transaction txn = datastore.beginTransaction();
+    try {
+        // Get the batches of followers who are not full
+        // to append our current user
+        Query getBatchesQuery = new Query("UserFollower")
+            .setAncestor(KeyFactory.createKey("User", targetId))
+            .setFilter(new Query.FilterPredicate("size", Query.FilterOperator.LESS_THAN, 39_000));
+            //.addSort("updatedAt", Query.SortDirection.ASCENDING);
+            // TODO: Find a way to rotate batches
 
-    // Get the batches of followers who are not full
-    // to append our current user
-    Query getBatchesQuery = new Query("UserFollower")
-        .setAncestor(KeyFactory.createKey("User", targetId))
-        .setFilter(new Query.FilterPredicate("size", Query.FilterOperator.LESS_THAN, 39_000));
+        // We set a limit of 1 because we won't need more than 1 resul
+        QueryResultList<Entity> availableBatches = datastore.prepare(getBatchesQuery).asQueryResultList(FetchOptions.Builder.withLimit(1));
+        
+        // TODO: Verify that there is at least 1 result if not create it (it means we have all our batches full)
+        // This gives us an available batch which we append our user to
 
-    // We set a limit of 1 because we won't need more than 1 result
-    // TODO: Get random batch among those that have under 39k size
-    QueryResultList<Entity> availableBatches = datastore.prepare(getBatchesQuery).asQueryResultList(FetchOptions.Builder.withLimit(1));
-    
-    // TODO: Verify that there is at least 1 result if not create it (it means we have all our batches full)
-    // This gives us an available batch which we append our user to
-    Entity availableBatch = availableBatches.get(0); // Get the first item from our list
-    
-    // Append reqUser.getId() to the availableBatch
-    ArrayList<String> batch = (ArrayList<String>) availableBatch.getProperty("batch");
-    
-    // In case we get an empty batch we need to declare it
-    if(batch == null) {
-      batch = new ArrayList<String>();
+        Entity availableBatch = null;
+        ArrayList<String> batch = new ArrayList<String>(); // In case we get an empty batch we need to declare it
+
+        if(availableBatches.size() > 0) {
+          availableBatch = availableBatches.get(0); // Get the first item from our list
+          batch = (ArrayList<String>) availableBatch.getProperty("batch");
+
+          if(batch == null) {
+            batch = new ArrayList<String>();
+          }
+        } else {
+          availableBatch = new Entity("UserFollower", user.getKey());
+        }
+        
+        // Append the user to the batch
+        batch.add(reqUser.getId());
+
+        // Update the batch
+        availableBatch.setProperty("batch", batch);
+        availableBatch.setProperty("size", batch.size());
+        availableBatch.setProperty("updatedAt", new Date());
+        
+        // Then put the batch back in the datastore
+        datastore.put(availableBatch);
+        txn.commit();
+    } finally {
+      if (txn.isActive()) {
+        txn.rollback();
+      }
     }
-
-    // Append the user to the batch
-    batch.add(reqUser.getId());
-
-    // Update the batch
-    availableBatch.setProperty("batch", batch);
-    availableBatch.setProperty("size", batch.size());
-    
-    // Then put the batch back in the datastore
-    datastore.put(availableBatch);
     return null;
   }
 }

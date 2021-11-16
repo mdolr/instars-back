@@ -104,6 +104,8 @@ public class Users {
           userFollowers.setProperty("size", 0);
         }
 
+        userFollowers.setProperty("updatedAt", new Date());
+
         // Put the UserFollowers entity in the datastore
         datastore.put(userFollowers);
       }
