@@ -2,6 +2,7 @@ package com.tinyinsta;
 
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
+import com.google.api.server.spi.response.UnauthorizedException;
 import com.google.appengine.api.datastore.*;
 
 import com.google.auth.Credentials;
@@ -21,6 +22,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+
+import com.google.api.server.spi.auth.common.User;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Posts {
@@ -77,24 +80,35 @@ public class Posts {
         return url;
     }
 
-    @ApiMethod(name = "posts.uploadPost", httpMethod = "post", path = "posts")
+    @ApiMethod(name = "posts.uploadPost", httpMethod = "post", path = "posts",
+            clientIds = { Constants.WEB_CLIENT_ID },
+            audiences = { Constants.WEB_CLIENT_ID },
+            scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
     public Entity uploadPost(
+            User reqUser,
             @Named("url") String url,
-            @Named("owner") String owner,
             @Named("title") String title,
             @Named("description") String description
-    ) {
+    ) throws UnauthorizedException, EntityNotFoundException {
+        if (reqUser == null) {
+            throw new UnauthorizedException("Authorization required");
+        }
+
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+        Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
+
         Transaction txn = datastore.beginTransaction();
+
         try {
             Date date = new Date();
             String date_timestamp = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(date);
-            String ownerId = "666"; //TODO Remplacer par ID utilisateur de façon à répartir l'écriture sur les différents buckets
+            String ownerId = (String) user.getProperty("id");
             Key postKey = KeyFactory.createKey("Post", ownerId + "_" + date_timestamp);
 
             Entity e = new Entity(postKey);
             e.setProperty("url", url);// TODO: Change url to store url
-            e.setProperty("owner", ownerId);
+            e.setProperty("user", ownerId);
             e.setProperty("title", title);
             e.setProperty("description", description);
             e.setProperty("createdAt", date_timestamp);

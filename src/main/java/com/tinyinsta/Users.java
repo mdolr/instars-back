@@ -38,10 +38,10 @@ import com.google.api.server.spi.response.ServiceUnavailableException;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Users {
-  @ApiMethod(name = "users.getSelf", httpMethod = "get", path = "users/me", clientIds = {
-      "284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com" }, audiences = {
-          "284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com" }, scopes = {
-              "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile" })
+  @ApiMethod(name = "users.getSelf", httpMethod = "get", path = "users/me",
+          clientIds = { Constants.WEB_CLIENT_ID },
+          audiences = { Constants.WEB_CLIENT_ID },
+          scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
   public Entity getSelf(User reqUser) throws UnauthorizedException, EntityNotFoundException {
     // If the user is not logged in : throw an error or redirect to the login page
     if (reqUser == null) {
@@ -77,6 +77,7 @@ public class Users {
       Entity newUser = new Entity("User", reqUser.getId());
 
       // Set the user properties
+      newUser.setProperty("id", reqUser.getId());
       newUser.setProperty("email", reqUser.getEmail());
       newUser.setProperty("handle", reqUser.getEmail().split("@")[0]);
       newUser.setProperty("name", reqUser.getEmail().split("@")[0]);
@@ -118,10 +119,10 @@ public class Users {
     }
   }
 
-  @ApiMethod(name = "users.updateSelf", httpMethod = "put", path = "users/me", clientIds = {
-      "284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com" }, audiences = {
-          "284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com" }, scopes = {
-              "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile" })
+  @ApiMethod(name = "users.updateSelf", httpMethod = "put", path = "users/me",
+          clientIds = { Constants.WEB_CLIENT_ID },
+          audiences = { Constants.WEB_CLIENT_ID },
+          scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
   public Entity updateSelf(User reqUser, Map<String, Object> reqBody)
       throws UnauthorizedException, EntityNotFoundException {
     // If the user is not logged in : throw an error or redirect to the login page
@@ -172,10 +173,10 @@ public class Users {
   }
 
   // A route to get timeline
-  @ApiMethod(name = "users.getTimeline", httpMethod = "get", path = "users/me/timeline", clientIds = {
-      "284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com" }, audiences = {
-          "284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com" }, scopes = {
-              "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile" })
+  @ApiMethod(name = "users.getTimeline", httpMethod = "get", path = "users/me/timeline",
+          clientIds = { Constants.WEB_CLIENT_ID },
+          audiences = { Constants.WEB_CLIENT_ID },
+          scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
   public List<Entity> getTimeline(User reqUser) throws UnauthorizedException, EntityNotFoundException {
     // If the user is not logged in : throw an error or redirect to the login page
     if (reqUser == null) {
