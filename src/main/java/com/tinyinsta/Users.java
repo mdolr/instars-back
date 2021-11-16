@@ -98,8 +98,10 @@ public class Users {
           list.add(reqUser.getId());
           
           userFollowers.setProperty("batch", list);
+          userFollowers.setProperty("size", 1);
         } else {
           userFollowers.setProperty("batch", new ArrayList<String>());
+          userFollowers.setProperty("size", 0);
         }
 
         // Put the UserFollowers entity in the datastore

@@ -14,7 +14,7 @@
         <!-- End of Endpoints Frameworks v2.0 -->
         <init-param>
             <param-name>services</param-name>
-            <param-value>com.tinyinsta.LikesRoutes, com.tinyinsta.Posts, com.tinyinsta.Users</param-value>
+            <param-value>com.tinyinsta.LikesRoutes, com.tinyinsta.Posts, com.tinyinsta.Users, com.tinyinsta.Follows</param-value>
         </init-param>
         <init-param>
             <param-name>restricted</param-name>
