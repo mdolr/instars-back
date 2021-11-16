@@ -38,7 +38,7 @@ import com.google.api.server.spi.response.ServiceUnavailableException;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Users {
-  @ApiMethod(name = "me", httpMethod = "get", path = "users/me", clientIds = {
+  @ApiMethod(name = "users.getSelf", httpMethod = "get", path = "users/me", clientIds = {
       "284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com" }, audiences = {
           "284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com" }, scopes = {
               "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile" })
@@ -118,7 +118,7 @@ public class Users {
     }
   }
 
-  @ApiMethod(name = "me", httpMethod = "put", path = "users/me", clientIds = {
+  @ApiMethod(name = "users.updateSelf", httpMethod = "put", path = "users/me", clientIds = {
       "284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com" }, audiences = {
           "284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com" }, scopes = {
               "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile" })
@@ -154,8 +154,8 @@ public class Users {
   }
 
   // A route to get an user by its handle
-  @ApiMethod(name = "handle", httpMethod = "get", path = "users/handle/{handle}")
-  public Entity getByHandle(@Named("handle") String handle) throws NotFoundException, EntityNotFoundException {
+  @ApiMethod(name = "users.getUserByHandle", httpMethod = "get", path = "users/handle/{handle}")
+  public Entity getUserByHandle(@Named("handle") String handle) throws NotFoundException, EntityNotFoundException {
     // Query the datastore to get the user by its handle
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     Query query = new Query("User").setFilter(new Query.FilterPredicate("handle", Query.FilterOperator.EQUAL, handle));
@@ -172,7 +172,7 @@ public class Users {
   }
 
   // A route to get timeline
-  @ApiMethod(name = "timeline", httpMethod = "get", path = "users/me/timeline", clientIds = {
+  @ApiMethod(name = "users.getTimeline", httpMethod = "get", path = "users/me/timeline", clientIds = {
       "284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com" }, audiences = {
           "284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com" }, scopes = {
               "https://www.googleapis.com/auth/userinfo.email", "https://www.googleapis.com/auth/userinfo.profile" })
