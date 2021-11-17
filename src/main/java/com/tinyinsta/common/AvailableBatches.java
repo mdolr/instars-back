@@ -27,7 +27,7 @@ public class AvailableBatches {
         this.number = this.availableBatches.size();
     }
 
-    public Entity getRandom() {
+    public Entity getOneRandom() {
         Entity availableBatch;
         ArrayList<String> batch = new ArrayList<String>(); // In case we get an empty batch we need to declare it
 
@@ -42,10 +42,11 @@ public class AvailableBatches {
         return availableBatch;
     }
 
-    public int getAvailableBatchesLikeCount(){
+    public int getLikesCount(){
         int count = 0;
         for (Entity batch : this.availableBatches){
-            count += (int) batch.getProperty("size");
+            int batchSize =  new Integer(batch.getProperty("size").toString());
+            count += batchSize;
         }
 
         return count;

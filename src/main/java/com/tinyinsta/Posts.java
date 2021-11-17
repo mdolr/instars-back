@@ -111,6 +111,7 @@ public class Posts {
             e.setProperty("title", title);
             e.setProperty("description", description);
             e.setProperty("createdAt", date_timestamp);
+            e.setProperty("fullBatches", 0);
 
             new PostReceivers().createEntity(user, postKey);
 

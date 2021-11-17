@@ -6,7 +6,7 @@ import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.response.ConflictException;
 import com.google.api.server.spi.response.UnauthorizedException;
 import com.google.appengine.api.datastore.*;
-import com.tinyinsta.common.AvailableBatch;
+import com.tinyinsta.common.AvailableBatches;
 import com.tinyinsta.common.Constants;
 import com.tinyinsta.common.ExistenceQuery;
 import com.tinyinsta.entity.PostLikers;
@@ -17,7 +17,7 @@ import java.util.Date;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Likes {
-    @ApiMethod(name = "likes.updateLikes", httpMethod = "put", path = "posts/{id}/likes",
+    @ApiMethod(name = "likes.updateLikes", httpMethod = "post", path = "posts/{id}/likes",
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
@@ -40,10 +40,10 @@ public class Likes {
 
         Transaction txn = datastore.beginTransaction();
 
-        AvailableBatch availableBatchObject = new AvailableBatch();
+        AvailableBatches availableBatches= new AvailableBatches("PostLiker", post.getKey());
 
         try {
-            Entity availableBatch = availableBatchObject.getRandom("PostLiker", post.getKey());
+            Entity availableBatch = availableBatches.getOneRandom();
             ArrayList<String> batch = (ArrayList<String>) availableBatch.getProperty("batch");
 
             if(batch == null) {
@@ -57,6 +57,13 @@ public class Likes {
             availableBatch.setProperty("size", batch.size());
             availableBatch.setProperty("updatedAt", new Date());
 
+            int likesCount = availableBatches.getLikesCount()+(new Integer(post.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE);
+
+            if(batch.size() >= Constants.MAX_BATCH_SIZE) {
+                post.setProperty("fullBatches", new Integer(post.getProperty("fullBatches").toString()) + 1);
+                datastore.put(post);
+            }
+
             datastore.put(availableBatch);
 
             txn.commit();
@@ -66,9 +73,10 @@ public class Likes {
             }
         }
 
-        for (int i = 0; i < Constants.LIKES_MAX_BUCKETS_NUMBER-availableBatchObject.getSize(); i++) {
+        for (int i = 0; i < Constants.LIKES_MAX_BUCKETS_NUMBER-availableBatches.getNumber(); i++) {
             new PostLikers().createEntity(post.getKey());
         }
+
         return null;
     }
 }
