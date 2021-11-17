@@ -119,15 +119,18 @@ public class Users {
         user.setProperty("updatedAt", new Date()); // Update the last updated date
 
         // Only allow update of certains variables
-        String[] mutableVariables = { "name", "handle", "email", "pictureURL" };
+        ArrayList<String> mutableVariables = new ArrayList<String>();
+        mutableVariables.add("name");
+        mutableVariables.add("handle");
+        mutableVariables.add("email");
+        mutableVariables.add("pictureURL");
 
         for (Map.Entry<String, Object> entry : reqBody.entrySet()) {
-            // TODO: Make sure the key matches one of the mutable variables
-            // String key = entry.getKey();
+            String key = entry.getKey().toLowerCase();
 
-            // if(Array.stream(mutableVariables).anyMatch(key::equals)) {
-            user.setProperty(entry.getKey(), entry.getValue()); // Update the property
-            // }
+            if(mutableVariables.contains(key)) {
+                user.setProperty(entry.getKey(), entry.getValue()); // Update the property
+            }
         }
 
         // Update each parameter
