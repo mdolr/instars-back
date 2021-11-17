@@ -1,10 +1,8 @@
 package com.tinyinsta.entity;
 
 
-import com.google.api.server.spi.config.ApiMethod;
 import com.google.appengine.api.datastore.*;
 
-import javax.inject.Named;
 import java.util.List;
 
 public class Likes {

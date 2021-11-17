@@ -1,56 +1,31 @@
 package com.tinyinsta;
 
+import com.google.api.server.spi.auth.common.User;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
-import com.google.appengine.api.datastore.*;
-import com.google.appengine.api.datastore.Query.SortDirection;
-import com.google.auth.Credentials;
-import com.google.auth.oauth2.GoogleCredentials;
-import com.google.cloud.storage.*;
-
-import javax.annotation.Nullable;
-import javax.inject.Named;
-
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.net.URL;
-import java.rmi.UnexpectedException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.ArrayList;
-
-import com.google.api.server.spi.auth.common.User;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken.Payload;
-import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
-
-import com.google.api.server.spi.response.BadRequestException;
-import com.google.api.server.spi.response.UnauthorizedException;
-import com.google.api.server.spi.response.ForbiddenException;
-import com.google.api.server.spi.response.NotFoundException;
 import com.google.api.server.spi.response.ConflictException;
-import com.google.api.server.spi.response.InternalServerErrorException;
-import com.google.api.server.spi.response.ServiceUnavailableException;
+import com.google.api.server.spi.response.UnauthorizedException;
+import com.google.appengine.api.datastore.*;
+
+import javax.inject.Named;
+import java.util.ArrayList;
+import java.util.Date;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Follows {
-  @ApiMethod(name = "follows.followById", httpMethod = "post", path = "follow/{targetId}",
+    @ApiMethod(name = "follows.followById", httpMethod = "post", path = "follow/{targetId}",
           clientIds = { Constants.WEB_CLIENT_ID },
           audiences = { Constants.WEB_CLIENT_ID },
           scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-  public Entity followById(User reqUser, @Named("targetId") String targetId) throws UnauthorizedException, EntityNotFoundException, ConflictException {
+    public Entity followById(User reqUser, @Named("targetId") String targetId) throws UnauthorizedException, EntityNotFoundException, ConflictException {
     // Make sure that the user is currently logged in
     if(reqUser == null) {
-      throw new UnauthorizedException("Authorization required");
+        throw new UnauthorizedException("Authorization required");
     }
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    
-    
+
+
     // First we verify that our user exists
     Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
 
@@ -61,15 +36,15 @@ public class Follows {
     Query existenceQuery = new Query("UserFollower")
         .setAncestor(KeyFactory.createKey("User", targetId))
         .setFilter(new Query.FilterPredicate("batch", Query.FilterOperator.EQUAL, reqUser.getId()));
-            
+
     // We set a limit of 1 because we won't need more than 1 result
     QueryResultList<Entity> existenceResults = datastore.prepare(existenceQuery).asQueryResultList(FetchOptions.Builder.withLimit(1));
-    
+
     // If we find a result then it means that the user is already following the target
     if(existenceResults.size() > 0) {
-      throw new ConflictException("You are already following this user");
+        throw new ConflictException("You are already following this user");
     }
-    
+
     Transaction txn = datastore.beginTransaction();
     try {
         // Get the batches of followers who are not full
@@ -82,7 +57,7 @@ public class Follows {
 
         // We set a limit of 1 because we won't need more than 1 resul
         QueryResultList<Entity> availableBatches = datastore.prepare(getBatchesQuery).asQueryResultList(FetchOptions.Builder.withLimit(1));
-        
+
         // TODO: Verify that there is at least 1 result if not create it (it means we have all our batches full)
         // This gives us an available batch which we append our user to
 
@@ -90,16 +65,16 @@ public class Follows {
         ArrayList<String> batch = new ArrayList<String>(); // In case we get an empty batch we need to declare it
 
         if(availableBatches.size() > 0) {
-          availableBatch = availableBatches.get(0); // Get the first item from our list
-          batch = (ArrayList<String>) availableBatch.getProperty("batch");
+            availableBatch = availableBatches.get(0); // Get the first item from our list
+            batch = (ArrayList<String>) availableBatch.getProperty("batch");
 
-          if(batch == null) {
-            batch = new ArrayList<String>();
-          }
+            if(batch == null) {
+                batch = new ArrayList<String>();
+            }
         } else {
-          availableBatch = new Entity("UserFollower", user.getKey());
+            availableBatch = new Entity("UserFollower", user.getKey());
         }
-        
+
         // Append the user to the batch
         batch.add(reqUser.getId());
 
@@ -107,15 +82,15 @@ public class Follows {
         availableBatch.setProperty("batch", batch);
         availableBatch.setProperty("size", batch.size());
         availableBatch.setProperty("updatedAt", new Date());
-        
+
         // Then put the batch back in the datastore
         datastore.put(availableBatch);
         txn.commit();
     } finally {
-      if (txn.isActive()) {
-        txn.rollback();
-      }
+        if (txn.isActive()) {
+            txn.rollback();
+        }
     }
     return null;
-  }
+    }
 }
