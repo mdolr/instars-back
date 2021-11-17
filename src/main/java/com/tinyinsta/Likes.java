@@ -8,6 +8,7 @@ import com.google.api.server.spi.response.UnauthorizedException;
 import com.google.appengine.api.datastore.*;
 import com.tinyinsta.common.AvailableBatch;
 import com.tinyinsta.common.Constants;
+import com.tinyinsta.common.ExistenceQuery;
 import com.tinyinsta.entity.PostLikers;
 
 import javax.inject.Named;
@@ -33,9 +34,9 @@ public class Likes {
 
         Entity post = datastore.get(KeyFactory.createKey("Post", postId));
 
-        /*if(new ExistenceQuery().check("PostLiker", post.getKey(), reqUser.getId())){
+        if(new ExistenceQuery().check("PostLiker", post.getKey(), reqUser.getId())){
             throw new ConflictException("You've already liked this post");
-        }*/
+        }
 
         Transaction txn = datastore.beginTransaction();
 
