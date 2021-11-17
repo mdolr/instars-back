@@ -42,7 +42,7 @@ public class AvailableBatches {
         return availableBatch;
     }
 
-    public int getLikesCount(){
+    public int getSizeCount(){
         int count = 0;
         for (Entity batch : this.availableBatches){
             int batchSize =  new Integer(batch.getProperty("size").toString());

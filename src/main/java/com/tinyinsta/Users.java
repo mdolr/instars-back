@@ -62,6 +62,7 @@ public class Users {
             newUser.setProperty("pictureURL", "https://thispersondoesnotexist.com/"); // set link to a default picture
             newUser.setProperty("createdAt", new Date());
             newUser.setProperty("updatedAt", new Date());
+            newUser.setProperty("fullBatches", 0);
 
             // Create the UserFollowers entity
 

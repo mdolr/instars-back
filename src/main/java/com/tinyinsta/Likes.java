@@ -47,7 +47,7 @@ public class Likes {
             ArrayList<String> batch = (ArrayList<String>) availableBatch.getProperty("batch");
 
             if(batch == null) {
-                batch = new ArrayList<String>();
+                batch = new ArrayList<>();
             }
             // Append the user to the batch
             batch.add(reqUser.getId());
@@ -57,7 +57,7 @@ public class Likes {
             availableBatch.setProperty("size", batch.size());
             availableBatch.setProperty("updatedAt", new Date());
 
-            int likesCount = availableBatches.getLikesCount()+(new Integer(post.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE);
+            int likesCount = availableBatches.getSizeCount()+(new Integer(post.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE);
 
             if(batch.size() >= Constants.MAX_BATCH_SIZE) {
                 post.setProperty("fullBatches", new Integer(post.getProperty("fullBatches").toString()) + 1);
