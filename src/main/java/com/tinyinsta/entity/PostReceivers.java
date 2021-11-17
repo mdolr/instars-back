@@ -17,8 +17,10 @@ public class PostReceivers {
 
         for(Entity follower : followers) {
             Entity receivers = new Entity("PostReceiver", postKey);
-            receivers.setProperty("batch", follower.getProperty("batch"));
-            datastore.put(receivers);
+            if(follower.getProperty("batch") != null) {
+                receivers.setProperty("batch", follower.getProperty("batch"));
+                datastore.put(receivers);
+            }
         }
     }
 
