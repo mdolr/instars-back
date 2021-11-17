@@ -159,54 +159,28 @@ public class Users {
     }
 
       // A route to get timeline
-  @ApiMethod(name = "users.getTimeline", httpMethod = "get", path = "users/me/timeline",
+  @ApiMethod(name = "users.getTimeline", httpMethod = "get", path = "users/timeline",
           clientIds = { Constants.WEB_CLIENT_ID },
           audiences = { Constants.WEB_CLIENT_ID },
           scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-  public List<Entity> getTimeline(User reqUser) throws UnauthorizedException, EntityNotFoundException {
+  public Map<Key,Entity> getTimeline(User reqUser) throws UnauthorizedException {
     // If the user is not logged in : throw an error or redirect to the login page
     if (reqUser == null) {
       throw new UnauthorizedException("Authorization required");
     }
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    // Entity userFollowings = datastore.get(KeyFactory.createKey("UserFollowers", reqUser.getId()));
-    //Query q1 = new Query("UserFollower");
-    //q1.setFilter(new Query.FilterPredicate("batch", Query.FilterOperator.EQUAL, reqUser.getId()));
-    //QueryResultList<Entity> listUserFollowing = datastore.prepare(q1).asQueryResultList(FetchOptions.Builder.withLimit(20));
+    
+    Query query = new Query("PostReceiver");
+    query.setFilter(new Query.FilterPredicate("batch", Query.FilterOperator.EQUAL, reqUser.getId()));
 
-    //for(Entity f : listUserFollowing){
-    //  f.getPropery("")
-    //}
-    //Query q2 = new Query("Post");
-    //q2.setFilter(new Query.FilterPredicate("owner", Query.FilterOperator.IN, listUserFollowing));
-
-    //ArrayList<String> followings = (ArrayList<String>) userFollowings.getProperty("batch");
-    //q.addSort("createdAt", Query.SortDirection.DESCENDING);
-    //q.setFilter(new Query.FilterPredicate("owner", Query.FilterOperator.EQUAL, followings));
-    //QueryResultList<Entity> result = datastore.prepare(q).asQueryResultList(FetchOptions.Builder.withLimit(10));
-
-
-    Query q1 = new Query("PostReceiver");
-    q1.setFilter(new Query.FilterPredicate("batch", Query.FilterOperator.EQUAL, reqUser.getId()));
-    //q1.addProjection(new PropertyProjection("Key", String.class));
-    QueryResultList<Entity> postList = datastore.prepare(q1).asQueryResultList(FetchOptions.Builder.withLimit(20));
-
-
-    //datastore.prepare(q1).
-    //ArrayList<String> postKeys = new ArrayList<String>();
-    //for(Entity p : postList){
-    //  postKeys.add(p.getProperty("Key").toString());
-    //}
-    ArrayList<Key> postKeys = new ArrayList<Key>();
-    for(Entity p : postList){
-      postKeys.add(p.getKey());
+    List<Entity> postReceivers = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(10));
+    List<Key> postKeys = new ArrayList<>();
+    for(Entity postReceiver : postReceivers){
+        postKeys.add(postReceiver.getParent());
     }
+    Iterable<Key> postKeysIterable = postKeys;
+    Map<Key,Entity> result = datastore.get(postKeysIterable);
 
-    Query q2 = new Query("Post");
-    q2.addSort("createdAt", Query.SortDirection.DESCENDING);
-    //q2.setFilter(new Query.FilterPredicate("Key", Query.FilterOperator.IN, postKeys));
-    q2.setFilter(new Query.FilterPredicate("Key" , Query.FilterOperator.EQUAL, postKeys));
-    QueryResultList<Entity> result = datastore.prepare(q2).asQueryResultList(FetchOptions.Builder.withLimit(20));
     return result;
   }
 
