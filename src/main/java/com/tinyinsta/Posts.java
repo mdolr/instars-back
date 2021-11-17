@@ -8,7 +8,8 @@ import com.google.appengine.api.datastore.*;
 import com.google.auth.Credentials;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.*;
-import com.tinyinsta.entity.Likes;
+import com.tinyinsta.common.Constants;
+import com.tinyinsta.entity.PostLikers;
 import com.tinyinsta.entity.PostReceivers;
 
 import javax.annotation.Nullable;
@@ -115,7 +116,7 @@ public class Posts {
 
             int nbBuckets = Constants.LIKES_MAX_BUCKETS_NUMBER;
             for (int i = 1; i <= nbBuckets; i++) {
-                new Likes().createEntity(String.valueOf(i), postKey);
+                new PostLikers().createEntity(postKey);
             }
 
             datastore.put(e);

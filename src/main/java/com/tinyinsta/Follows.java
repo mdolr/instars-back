@@ -6,6 +6,7 @@ import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.response.ConflictException;
 import com.google.api.server.spi.response.UnauthorizedException;
 import com.google.appengine.api.datastore.*;
+import com.tinyinsta.common.Constants;
 
 import javax.inject.Named;
 import java.util.ArrayList;
@@ -34,7 +35,7 @@ public class Follows {
 
     // Check that the target doesn't belong to one of the children "UserFollower" of the user
     Query existenceQuery = new Query("UserFollower")
-        .setAncestor(KeyFactory.createKey("User", targetId))
+        .setAncestor(target.getKey())
         .setFilter(new Query.FilterPredicate("batch", Query.FilterOperator.EQUAL, reqUser.getId()));
 
     // We set a limit of 1 because we won't need more than 1 result

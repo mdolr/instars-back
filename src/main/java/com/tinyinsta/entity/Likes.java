@@ -12,7 +12,6 @@ public class Likes {
 
         Entity likes = new Entity("Like", name, parent);
         likes.setProperty("count", 0);
-        likes.setProperty("likers", 0);
         datastore.put(likes);
     }
 
