@@ -59,7 +59,8 @@ public class Follows {
         availableBatch.setProperty("size", batch.size());
         availableBatch.setProperty("updatedAt", new Date());
 
-        //-1 to remove self follower from count
+        // Count all available batches size + completed batches number * batch max size
+        // -1 to remove self follower from count
         int followersCount = availableBatches.getSizeCount()+(new Integer(user.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE) - 1;
 
         if(batch.size() >= Constants.MAX_BATCH_SIZE) {

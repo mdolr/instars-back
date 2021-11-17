@@ -57,6 +57,7 @@ public class Likes {
             availableBatch.setProperty("size", batch.size());
             availableBatch.setProperty("updatedAt", new Date());
 
+            // Count all available batches size + completed batches number * batch max size
             int likesCount = availableBatches.getSizeCount()+(new Integer(post.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE);
 
             if(batch.size() >= Constants.MAX_BATCH_SIZE) {

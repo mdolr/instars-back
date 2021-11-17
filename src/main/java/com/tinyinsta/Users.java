@@ -46,12 +46,9 @@ public class Users {
             // - picture : the user picture
             // - createdAt : the date of creation
             // - updatedAt : the date of last update
-            // - followers : An UserFollowers entity which contains multiple lists of
-            // followers
-            // - following : An UserFollowings entity which contains multiple lists of
-            // followings
+            // - fullBatches : number of followers batches full
+            // - followers : An UserFollowers entity which contains multiple lists of followers
 
-            // Create the user entity
             Entity newUser = new Entity("User", reqUser.getId());
 
             // Set the user properties
@@ -73,7 +70,7 @@ public class Users {
 
                 // The user's first follower is itself so it can see its own posts in its timeline
                 if(i == 0) {
-                    ArrayList<String> list = new ArrayList<String>();
+                    List<String> list = new ArrayList<>();
                     list.add(reqUser.getId());
 
                     userFollowers.setProperty("batch", list);
@@ -89,15 +86,9 @@ public class Users {
                 datastore.put(userFollowers);
             }
 
-            // Create the UserFollowings entity
-            Entity newUserFollowings = new Entity("UserFollowing", newUser.getKey());
-            newUserFollowings.setProperty("batch", new ArrayList<String>());
-
             // Put the entities in the datastore
             datastore.put(newUser);
-            datastore.put(newUserFollowings);
 
-            // Return the user
             return newUser;
         }
     }
@@ -157,31 +148,4 @@ public class Users {
 
         return user;
     }
-
-      // A route to get timeline
-  @ApiMethod(name = "users.getTimeline", httpMethod = "get", path = "users/timeline",
-          clientIds = { Constants.WEB_CLIENT_ID },
-          audiences = { Constants.WEB_CLIENT_ID },
-          scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-  public Map<Key,Entity> getTimeline(User reqUser) throws UnauthorizedException {
-    // If the user is not logged in : throw an error or redirect to the login page
-    if (reqUser == null) {
-      throw new UnauthorizedException("Authorization required");
-    }
-    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    
-    Query query = new Query("PostReceiver");
-    query.setFilter(new Query.FilterPredicate("batch", Query.FilterOperator.EQUAL, reqUser.getId()));
-
-    List<Entity> postReceivers = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(10));
-    List<Key> postKeys = new ArrayList<>();
-    for(Entity postReceiver : postReceivers){
-        postKeys.add(postReceiver.getParent());
-    }
-    Iterable<Key> postKeysIterable = postKeys;
-    Map<Key,Entity> result = datastore.get(postKeysIterable);
-
-    return result;
-  }
-
 }

@@ -29,7 +29,7 @@ public class AvailableBatches {
 
     public Entity getOneRandom() {
         Entity availableBatch;
-        ArrayList<String> batch = new ArrayList<String>(); // In case we get an empty batch we need to declare it
+        ArrayList<String> batch = new ArrayList<>(); // In case we get an empty batch we need to declare it
 
         int randomBatch = new RandomGenerator().get(0, batch.size());
 

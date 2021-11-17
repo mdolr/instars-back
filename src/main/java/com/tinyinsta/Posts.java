@@ -43,7 +43,7 @@ public class Posts {
         Query q = new Query("Post");
 
         if (user != null) {
-            q.setFilter(new Query.FilterPredicate("owner", Query.FilterOperator.EQUAL, user));
+            q.setFilter(new Query.FilterPredicate("user", Query.FilterOperator.EQUAL, user));
         }
 
         PreparedQuery pq = datastore.prepare(q);
