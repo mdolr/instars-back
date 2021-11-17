@@ -26,15 +26,16 @@ public class Timeline {
         }
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-        Query query = new Query("PostReceiver");
+        Query query = new Query("PostReceiver").addSort("createdAt", Query.SortDirection.DESCENDING);
         query.setFilter(new Query.FilterPredicate("batch", Query.FilterOperator.EQUAL, reqUser.getId()));
+        List<Entity> postReceivers = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(20));
 
-        List<Entity> postReceivers = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(10));
         List<Key> postKeys = new ArrayList<>();
         for(Entity postReceiver : postReceivers){
             postKeys.add(postReceiver.getParent());
         }
         Iterable<Key> postKeysIterable = postKeys;
+
         Map<Key,Entity> posts = datastore.get(postKeysIterable);
 
         //Recover likes and user info
@@ -51,6 +52,7 @@ public class Timeline {
             post.setProperty("userName", user.getProperty("name"));
             post.setProperty("userPicture", user.getProperty("pictureURL"));
         }
+        //TODO : Sort posts
         return posts;
     }
 }

@@ -3,11 +3,12 @@ package com.tinyinsta.entity;
 
 import com.google.appengine.api.datastore.*;
 
+import java.util.Date;
 import java.util.List;
 
 public class PostReceivers {
 
-    public void createEntity(Entity user, Key postKey) {
+    public void createEntity(Entity user, Entity post) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         Query q = new Query("UserFollower").setAncestor(user.getKey());
@@ -16,8 +17,10 @@ public class PostReceivers {
         List<Entity> followers = pq.asList(FetchOptions.Builder.withDefaults());
 
         for(Entity follower : followers) {
-            Entity receivers = new Entity("PostReceiver", postKey);
+            Entity receivers = new Entity("PostReceiver", post.getKey());
             if(follower.getProperty("batch") != null) {
+
+                receivers.setProperty("createdAt", post.getProperty("createdAt"));
                 receivers.setProperty("batch", follower.getProperty("batch"));
                 datastore.put(receivers);
             }

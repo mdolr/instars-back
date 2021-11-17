@@ -101,30 +101,30 @@ public class Posts {
 
         try {
             Date date = new Date();
-            String date_timestamp = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss").format(date);
+            String date_timestamp = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSS").format(date);
             String ownerId = (String) user.getProperty("id");
             Key postKey = KeyFactory.createKey("Post", ownerId + "_" + date_timestamp);
 
-            Entity e = new Entity(postKey);
-            e.setProperty("url", url);// TODO: Change url to store url
-            e.setProperty("user", ownerId);
-            e.setProperty("title", title);
-            e.setProperty("description", description);
-            e.setProperty("createdAt", date_timestamp);
-            e.setProperty("fullBatches", 0);
+            Entity post = new Entity(postKey);
+            post.setProperty("url", url);// TODO: Change url to store url
+            post.setProperty("user", ownerId);
+            post.setProperty("title", title);
+            post.setProperty("description", description);
+            post.setProperty("createdAt", date_timestamp);
+            post.setProperty("fullBatches", 0);
 
-            new PostReceivers().createEntity(user, postKey);
+            new PostReceivers().createEntity(user, post);
 
             int nbBuckets = Constants.LIKES_MAX_BUCKETS_NUMBER;
             for (int i = 1; i <= nbBuckets; i++) {
                 new PostLikers().createEntity(postKey);
             }
 
-            datastore.put(e);
+            datastore.put(post);
 
             txn.commit();
 
-            return e;
+            return post;
         } finally {
             if (txn.isActive()) {
                 txn.rollback();
