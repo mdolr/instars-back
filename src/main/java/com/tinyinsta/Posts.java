@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import com.google.api.server.spi.auth.common.User;
+import com.tinyinsta.entity.Likes;
+import com.tinyinsta.entity.PostReceivers;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Posts {
@@ -38,13 +40,13 @@ public class Posts {
     }
 
     @ApiMethod(name = "posts.getAll", httpMethod = "get", path = "posts")
-    public List<Entity> getAll(@Nullable @Named("owner") String owner) {
+    public List<Entity> getAll(@Nullable @Named("user") String user) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         Query q = new Query("Post");
 
-        if (owner != null) {
-            q.setFilter(new Query.FilterPredicate("owner", Query.FilterOperator.EQUAL, owner));
+        if (user != null) {
+            q.setFilter(new Query.FilterPredicate("owner", Query.FilterOperator.EQUAL, user));
         }
 
         PreparedQuery pq = datastore.prepare(q);
@@ -113,16 +115,7 @@ public class Posts {
             e.setProperty("description", description);
             e.setProperty("createdAt", date_timestamp);
 
-            Query q = new Query("UserFollower").setAncestor(user.getKey());
-
-            PreparedQuery pq = datastore.prepare(q);
-            List<Entity> followers = pq.asList(FetchOptions.Builder.withDefaults());
-
-            for(Entity follower : followers) {
-                Entity receivers = new Entity("PostReceiver", postKey);
-                receivers.setProperty("batch", follower.getProperty("batch"));
-                datastore.put(receivers);
-            } //TODO:
+            new PostReceivers().createEntity(user, postKey);
 
             int nbBuckets = Constants.LIKES_MAX_BUCKETS_NUMBER;
             for (int i = 1; i <= nbBuckets; i++) {
