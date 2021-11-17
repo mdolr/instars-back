@@ -18,32 +18,29 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Posts {
 
     @ApiMethod(name = "posts.getOne", httpMethod = "get", path = "posts/{id}")
-    public Entity getOne(@Named("id") String id) throws EntityNotFoundException {
+    public Entity getOne(@Named("id") String postId) throws EntityNotFoundException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-        Entity post = datastore.get(KeyFactory.createKey("Post", id));
+        Entity post = datastore.get(KeyFactory.createKey("Post", postId));
 
         return post;
     }
 
     @ApiMethod(name = "posts.getAll", httpMethod = "get", path = "posts")
-    public List<Entity> getAll(@Nullable @Named("user") String user) {
+    public List<Entity> getAll(@Nullable @Named("userId") String userId) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-        Query q = new Query("Post");
+        Query q = new Query("Post").addSort("createdAt", Query.SortDirection.DESCENDING);
 
-        if (user != null) {
-            q.setFilter(new Query.FilterPredicate("user", Query.FilterOperator.EQUAL, user));
+        if (userId != null) {
+            q.setFilter(new Query.FilterPredicate("userId", Query.FilterOperator.EQUAL, userId));
         }
 
         PreparedQuery pq = datastore.prepare(q);
@@ -100,17 +97,14 @@ public class Posts {
         Transaction txn = datastore.beginTransaction();
 
         try {
-            Date date = new Date();
-            String date_timestamp = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSS").format(date);
-            String ownerId = (String) user.getProperty("id");
-            Key postKey = KeyFactory.createKey("Post", ownerId + "_" + date_timestamp);
+            Key postKey = KeyFactory.createKey("Post", UUID.randomUUID().toString());
 
             Entity post = new Entity(postKey);
             post.setProperty("url", url);// TODO: Change url to store url
-            post.setProperty("user", ownerId);
+            post.setProperty("userId", user.getProperty("id").toString());
             post.setProperty("title", title);
             post.setProperty("description", description);
-            post.setProperty("createdAt", date_timestamp);
+            post.setProperty("createdAt", new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSS").format(new Date()));
             post.setProperty("fullBatches", 0);
 
             new PostReceivers().createEntity(user, post);
