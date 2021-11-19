@@ -38,7 +38,8 @@ public class Timeline {
 
         Map<Key,Entity> posts = datastore.get(postKeysIterable);
 
-        //Recover likes and user info
+        // Recover likes and user info
+        // Use posts.keySet() transform to array list and then sort the array list or smth
         for(Map.Entry<Key, Entity> entry : posts.entrySet()){
             Entity post = entry.getValue();
 

@@ -52,7 +52,7 @@ public class Posts {
     @ApiMethod(name = "posts.requestSignedURL", httpMethod = "get", path = "signedURL")
     public URL requestSignedURL(@Named("fileName") String fileName) {
         String projectId = "tinyinsta-web";
-        String bucketName = "posts_test789";
+        String bucketName = "signed-urls-upload";
 
         Credentials credentials = null;
         try {
@@ -69,7 +69,8 @@ public class Posts {
 
         // Generate Signed URL
         Map<String, String> extensionHeaders = new HashMap<>();
-        extensionHeaders.put("Content-Type", "application/octet-stream");
+        extensionHeaders.put("Content-Type", "image/png");
+        //extensionHeaders.put("Access-Control-Allow-Origin", "*");
 
         URL url = storage.signUrl(blobInfo, 15, TimeUnit.MINUTES, Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
                 Storage.SignUrlOption.withExtHeaders(extensionHeaders), Storage.SignUrlOption.withV4Signature());
