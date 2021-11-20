@@ -8,11 +8,14 @@ import com.google.appengine.api.datastore.*;
 import com.tinyinsta.common.AvailableBatches;
 import com.tinyinsta.common.Constants;
 import com.tinyinsta.dto.PostDTO;
+import com.tinyinsta.common.ExistenceQuery;
+import com.google.api.server.spi.response.ConflictException;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.*;
+
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Timeline {
@@ -21,7 +24,7 @@ public class Timeline {
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-    public List<PostDTO> getTimeline(User reqUser) throws UnauthorizedException, EntityNotFoundException {
+    public List<PostDTO> getTimeline(User reqUser) throws UnauthorizedException, EntityNotFoundException, ConflictException {
         // If the user is not logged in : throw an error or redirect to the login page
         if (reqUser == null) {
             throw new UnauthorizedException("Authorization required");
@@ -51,6 +54,9 @@ public class Timeline {
             // Count all available batches size + completed batches number * batch max size
             int likesCount = availableBatches.getSizeCount()+(new Integer(post.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE);
             post.setProperty("likes", likesCount);
+
+            Boolean hasLiked = (Boolean) new ExistenceQuery().check("PostLiker", post.getKey(), reqUser.getId());
+            post.setProperty("hasLiked", hasLiked);
 
             Entity user = datastore.get(KeyFactory.createKey("User", post.getProperty("authorId").toString()));
             posts.add(new PostDTO(post, user, likesCount));
