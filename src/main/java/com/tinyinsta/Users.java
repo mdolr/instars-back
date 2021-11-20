@@ -11,6 +11,8 @@ import com.tinyinsta.common.AvailableBatches;
 import com.tinyinsta.common.Constants;
 import com.tinyinsta.common.ExistenceQuery;
 
+import javax.servlet.http.HttpServletRequest;
+
 import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.Date;
@@ -18,6 +20,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.tinyinsta.dto.UserDTO;
+import org.apache.commons.codec.binary.Base64;
+import org.json.*;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Users {
@@ -25,11 +29,12 @@ public class Users {
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-    public UserDTO getSelf(User reqUser) throws UnauthorizedException, EntityNotFoundException {
+    public UserDTO getSelf(User reqUser, HttpServletRequest request) throws UnauthorizedException, EntityNotFoundException {
         // If the user is not logged in : throw an error or redirect to the login page
         if (reqUser == null) {
             throw new UnauthorizedException("Authorization required");
         }
+
 
         // Query the datastore to get the user by its ID
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -54,14 +59,26 @@ public class Users {
             // - fullBatches : number of followers batches full
             // - followers : An UserFollowers entity which contains multiple lists of followers
 
+            // Decode Authorization JWT
+            String token = (String) request.getHeader("Authorization");
+            token = token.substring(token.indexOf(" ") + 1);
+            
+            String[] chunks = token.split("\\.");
+            
+            String stringHeader = new String(Base64.decodeBase64(chunks[0]));
+            String stringPayload = new String(Base64.decodeBase64(chunks[1]));
+
+            JSONObject header = new JSONObject(stringHeader);  
+            JSONObject payload = new JSONObject(stringPayload);
+
             Entity newUser = new Entity("User", reqUser.getId());
 
             // Set the user properties
             newUser.setProperty("id", reqUser.getId());
             newUser.setProperty("email", reqUser.getEmail());
             newUser.setProperty("handle", reqUser.getEmail().split("@")[0]);
-            newUser.setProperty("name", reqUser.getEmail().split("@")[0]);
-            newUser.setProperty("pictureURL", "https://thispersondoesnotexist.com/"); // set link to a default picture
+            newUser.setProperty("name", payload.getString("name"));
+            newUser.setProperty("pictureURL", payload.getString("picture")); 
             newUser.setProperty("createdAt", new Date());
             newUser.setProperty("updatedAt", new Date());
             newUser.setProperty("fullBatches", 0);
