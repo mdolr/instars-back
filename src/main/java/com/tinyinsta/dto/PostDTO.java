@@ -14,6 +14,8 @@ public class PostDTO {
   public String mediaURL;
   public String authorId;
   public long likes;
+  public String uploadURL;
+  public Boolean published;
 
   public PostDTO(Entity post, long likes) { 
     this.id = (String) post.getProperty("id");
@@ -23,5 +25,7 @@ public class PostDTO {
     this.mediaURL = (String) post.getProperty("mediaURL");
     this.authorId = (String) post.getProperty("authorId");
     this.likes = likes;
+    this.published = (Boolean) post.getProperty("published");
+    this.uploadURL = (String) post.getProperty("uploadURL");
   }
 }

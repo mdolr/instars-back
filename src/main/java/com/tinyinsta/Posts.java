@@ -93,9 +93,7 @@ public class Posts {
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
     public PostDTO uploadPost(
             User reqUser,
-            @Named("url") String url,
-            @Named("title") String title,
-            @Named("description") String description
+            Map<String, Object> reqBody
     ) throws UnauthorizedException, EntityNotFoundException {
         if (reqUser == null) {
             throw new UnauthorizedException("Authorization required");
@@ -105,20 +103,53 @@ public class Posts {
 
         Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
 
+        String projectId = "tinyinsta-web";
+        String bucketName = "signed-urls-upload";
+
+        String postId = UUID.randomUUID().toString();
+        String pictureId = UUID.randomUUID().toString();
+
+        String fileName = (String) reqBody.get("fileName");
+        
+        String fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1);
+        String uploadFileName = pictureId + "." + fileExtension;
+
+        Credentials credentials = null;
+
+        try {
+            credentials = GoogleCredentials.fromStream(new FileInputStream("src/cred.json"));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        Storage storage = StorageOptions.newBuilder().setProjectId(projectId).setCredentials(credentials).build()
+                .getService();
+
+        // Define Resource
+        BlobInfo blobInfo = BlobInfo.newBuilder(BlobId.of(bucketName, uploadFileName)).build();
+
+        // Generate Signed URL
+        Map<String, String> extensionHeaders = new HashMap<>();
+        extensionHeaders.put("Content-Type", (String) reqBody.get("fileType"));
+        //extensionHeaders.put("Access-Control-Allow-Origin", "*");
+
+        URL url = storage.signUrl(blobInfo, 15, TimeUnit.MINUTES, Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
+                Storage.SignUrlOption.withExtHeaders(extensionHeaders), Storage.SignUrlOption.withV4Signature());
+        
         Transaction txn = datastore.beginTransaction();
 
         try {
-            String postId = UUID.randomUUID().toString();
             Key postKey = KeyFactory.createKey("Post", postId);
 
             Entity post = new Entity(postKey);
             post.setProperty("id", postId);
-            post.setProperty("mediaURL", url);// TODO: Change url to store url
+            post.setProperty("pictureId", pictureId);
+            post.setProperty("mediaURL", "https://storage.googleapis.com/" + bucketName + "/" + uploadFileName);// TODO: Change url to store url
             post.setProperty("authorId", user.getProperty("id").toString());
-            post.setProperty("title", title);
-            post.setProperty("description", description);
+            post.setProperty("description", reqBody.get("description"));
             post.setProperty("createdAt", new Date());
             post.setProperty("fullBatches", 0);
+            post.setProperty("published", false);
 
             new PostReceivers().createEntity(user, post);
 
@@ -131,6 +162,8 @@ public class Posts {
 
             txn.commit();
 
+            // To only return it once in this request and never return it in the future
+            post.setProperty("uploadURL", url.toString());
             return new PostDTO(post, 0);
         } finally {
             if (txn.isActive()) {
