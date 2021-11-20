@@ -1,4 +1,4 @@
-package com.tinyinsta.res;
+package com.tinyinsta.dto;
 
 import java.util.*;
 

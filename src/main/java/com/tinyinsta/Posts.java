@@ -21,8 +21,8 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import com.tinyinsta.res.PostDTO;
-import com.tinyinsta.res.UrlDTO;
+import com.tinyinsta.dto.PostDTO;
+import com.tinyinsta.dto.UrlDTO;
 
 import com.google.api.server.spi.response.NotFoundException;
 
@@ -35,7 +35,7 @@ public class Posts {
 
         Entity post = datastore.get(KeyFactory.createKey("Post", postId));
 
-        return new PostDTO(post, 0); //TODO: Add like number and full retrieval of post
+        return new PostDTO(post, null, 0); //TODO: Add like number and full retrieval of post
     }
 
     @ApiMethod(name = "posts.getAll", httpMethod = "get", path = "posts")
@@ -54,7 +54,7 @@ public class Posts {
         ArrayList<PostDTO> posts = new ArrayList<PostDTO>();
         
         for(Entity post : results) {
-            posts.add(new PostDTO(post, 0)); //TODO: Add like number and full retrieval of post 
+            posts.add(new PostDTO(post, null, 0)); //TODO: Add like number and full retrieval of post 
         }
 
         return posts;
@@ -136,7 +136,7 @@ public class Posts {
             txn.commit();
 
             post.setProperty("uploadURL", url.toString()); // only return it once don't store it in the datastore
-            return new PostDTO(post, 0);
+            return new PostDTO(post, user, 0);
         } finally {
             if (txn.isActive()) {
                 txn.rollback();
@@ -205,7 +205,7 @@ public class Posts {
           datastore.put(post);
           txn.commit();
 
-          return new PostDTO(post, 0);
+          return new PostDTO(post, user, 0);
         } finally {
             if (txn.isActive()) {
                 txn.rollback();

@@ -1,4 +1,4 @@
-package com.tinyinsta.res;
+package com.tinyinsta.dto;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -16,8 +16,9 @@ public class PostDTO {
   public long likes;
   public String uploadURL;
   public Boolean published;
+  public UserDTO author;
 
-  public PostDTO(Entity post, long likes) { 
+  public PostDTO(Entity post, Entity user, long likes) { 
     this.id = (String) post.getProperty("id");
     this.createdAt = (Date) post.getProperty("createdAt");
     this.title = (String) post.getProperty("title");
@@ -27,5 +28,6 @@ public class PostDTO {
     this.likes = likes;
     this.published = (Boolean) post.getProperty("published");
     this.uploadURL = (String) post.getProperty("uploadURL");
+    this.author = new UserDTO(user, true, 0);
   }
 }

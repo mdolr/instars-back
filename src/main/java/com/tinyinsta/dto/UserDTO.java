@@ -1,4 +1,4 @@
-package com.tinyinsta.res;
+package com.tinyinsta.dto;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -13,8 +13,9 @@ public class UserDTO {
   public String handle;
   public String email;
   public String pictureURL;
+  public long followers;
 
-  public UserDTO(Entity user, Boolean hideSensitiveData) { 
+  public UserDTO(Entity user, Boolean hideSensitiveData, long followers) { 
     this.id = (String) user.getProperty("id");
     this.createdAt = (Date) user.getProperty("createdAt");
     this.updatedAt = (Date) user.getProperty("updatedAt");
@@ -22,6 +23,7 @@ public class UserDTO {
     this.handle = (String) user.getProperty("handle");
     this.email = (String) user.getProperty("email");
     this.pictureURL = (String) user.getProperty("pictureURL");
+    this.followers = followers;
 
     if (hideSensitiveData) {
       this.email = null;

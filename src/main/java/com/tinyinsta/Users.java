@@ -14,7 +14,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
-import com.tinyinsta.res.UserDTO;
+import com.tinyinsta.dto.UserDTO;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Users {
@@ -35,7 +35,7 @@ public class Users {
         try {
             // Get entity by key id
             Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
-            return new UserDTO(user, false);
+            return new UserDTO(user, false, 0);
         }
 
         // If the user isn't already in the datastore
@@ -91,7 +91,7 @@ public class Users {
             // Put the entities in the datastore
             datastore.put(newUser);
 
-            return new UserDTO(newUser, false);
+            return new UserDTO(newUser, false, 0);
         }
     }
 
@@ -121,7 +121,7 @@ public class Users {
 
         for (Map.Entry<String, Object> entry : reqBody.entrySet()) {
             String key = entry.getKey();
-            
+
             if(mutableVariables.contains(key)) {
                 user.setProperty(entry.getKey(), entry.getValue()); // Update the property
             }
@@ -130,7 +130,7 @@ public class Users {
         // Update each parameter
         datastore.put(user);
 
-        return new UserDTO(user, false);
+        return new UserDTO(user, false, 0);
     }
 
     // A route to get an user by its handle
@@ -148,6 +148,6 @@ public class Users {
         // Remove sensitive data before returning the user (only in the response do not update the datastore)
         user.removeProperty("email");
 
-        return new UserDTO(user, true);
+        return new UserDTO(user, true, 0);
     }
 }
