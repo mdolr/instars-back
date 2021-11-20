@@ -35,6 +35,11 @@ public class Timeline {
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
+        // Verify that the user exists
+        // otherwise we receive a non existing entity when retrieving the timeline
+        // if the loggedUser doesn't already exist in the databse !!!
+        Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
+
         FetchOptions fetchOptions = FetchOptions.Builder.withLimit(Constants.PAGINATION_SIZE);
 
         if (after != null) {
@@ -74,8 +79,8 @@ public class Timeline {
             Boolean hasLiked = (Boolean) new ExistenceQuery().check("PostLiker", post.getKey(), reqUser.getId());
             post.setProperty("hasLiked", hasLiked);
 
-            Entity user = datastore.get(KeyFactory.createKey("User", post.getProperty("authorId").toString()));
-            posts.add(new PostDTO(post, user, likesCount));
+            Entity author = datastore.get(KeyFactory.createKey("User", post.getProperty("authorId").toString()));
+            posts.add(new PostDTO(post, author, likesCount));
         }
 
         Collections.sort(posts, new Comparator<PostDTO>() {

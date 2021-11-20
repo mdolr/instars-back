@@ -15,13 +15,15 @@ import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.Date;
 
+import com.tinyinsta.dto.PostDTO;
+
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Likes {
     @ApiMethod(name = "likes.updateLikes", httpMethod = "post", path = "posts/{id}/likes",
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-    public Entity updateLikes(User reqUser, @Named("id") String postId) throws EntityNotFoundException, UnauthorizedException, ConflictException {
+    public PostDTO updateLikes(User reqUser, @Named("id") String postId) throws EntityNotFoundException, UnauthorizedException, ConflictException {
 
         if(reqUser == null) {
             throw new UnauthorizedException("Authorization required");
@@ -42,6 +44,8 @@ public class Likes {
 
         AvailableBatches availableBatches= new AvailableBatches("PostLiker", post.getKey());
 
+        int likesCount;
+
         try {
             Entity availableBatch = availableBatches.getOneRandom();
             ArrayList<String> batch = (ArrayList<String>) availableBatch.getProperty("batch");
@@ -58,7 +62,7 @@ public class Likes {
             availableBatch.setProperty("updatedAt", new Date());
 
             // Count all available batches size + completed batches number * batch max size
-            int likesCount = availableBatches.getSizeCount()+(new Integer(post.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE);
+            likesCount = availableBatches.getSizeCount()+(new Integer(post.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE);
 
             if(batch.size() >= Constants.MAX_BATCH_SIZE) {
                 post.setProperty("fullBatches", new Integer(post.getProperty("fullBatches").toString()) + 1);
@@ -78,6 +82,8 @@ public class Likes {
             new PostLikers().createEntity(post.getKey());
         }
 
-        return null;
+        post.setProperty("hasLiked", true);
+        
+        return new PostDTO(post, null, likesCount);
     }
 }

@@ -30,6 +30,9 @@ public class PostDTO {
     this.hasLiked = (Boolean) post.getProperty("hasLiked");
     this.published = (Boolean) post.getProperty("published");
     this.uploadURL = (String) post.getProperty("uploadURL");
-    this.author = new UserDTO(user, true, 0);
+    
+    if(user != null) {
+      this.author = new UserDTO(user, true, 0);
+    }
   }
 }
