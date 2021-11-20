@@ -10,7 +10,7 @@ import com.google.appengine.api.datastore.*;
 import com.tinyinsta.common.AvailableBatches;
 import com.tinyinsta.common.Constants;
 import com.tinyinsta.dto.PostDTO;
-import com.tinyinsta.dto.TimelineDTO;
+import com.tinyinsta.dto.PaginationDTO;
 import com.tinyinsta.common.ExistenceQuery;
 import com.google.api.server.spi.response.ConflictException;
 
@@ -27,7 +27,7 @@ public class Timeline {
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-    public TimelineDTO getTimeline(User reqUser, @Nullable @Named("after") String after, @Nullable @Named("before") String before) throws UnauthorizedException, EntityNotFoundException, ConflictException {
+    public PaginationDTO getTimeline(User reqUser, @Nullable @Named("after") String after, @Nullable @Named("before") String before) throws UnauthorizedException, EntityNotFoundException, ConflictException {
         // If the user is not logged in : throw an error or redirect to the login page
         if (reqUser == null) {
             throw new UnauthorizedException("Authorization required");
@@ -35,7 +35,7 @@ public class Timeline {
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-        FetchOptions fetchOptions = FetchOptions.Builder.withLimit(2);
+        FetchOptions fetchOptions = FetchOptions.Builder.withLimit(Constants.PAGINATION_SIZE);
 
         if (after != null) {
             fetchOptions.startCursor(Cursor.fromWebSafeString(after));
@@ -46,9 +46,8 @@ public class Timeline {
 
         QueryResultList<Entity> postReceivers = datastore.prepare(query).asQueryResultList(fetchOptions);
         
-        Cursor cursor = postReceivers.getCursor();
-        String nextCursor = cursor.toWebSafeString();
-        String previousCursor = cursor.reverse().toWebSafeString();
+        String nextCursor = postReceivers.getCursor().toWebSafeString();
+        String previousCursor = nextCursor;
 
         List<Key> postKeys = new ArrayList<>();
 
@@ -84,6 +83,6 @@ public class Timeline {
               return b.createdAt.compareTo(a.createdAt);
             }});
 
-        return new TimelineDTO(posts, previousCursor, nextCursor);
+        return new PaginationDTO(posts, previousCursor, nextCursor);
     }
 }

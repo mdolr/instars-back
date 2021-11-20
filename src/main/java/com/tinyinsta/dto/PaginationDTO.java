@@ -8,13 +8,13 @@ import java.util.ArrayList;
 import java.util.*;
 import com.google.appengine.api.datastore.*;
 
-public class TimelineDTO {
+public class PaginationDTO {
   public String previous;
   public String next;
-  public List<PostDTO> posts;
+  public List<PostDTO> items;
 
-  public TimelineDTO(List<PostDTO> posts, String previous, String next) { 
-      this.posts = posts;
+  public PaginationDTO(List<PostDTO> posts, String previous, String next) { 
+      this.items = posts;
       this.previous = previous;
       this.next = next;
   }
