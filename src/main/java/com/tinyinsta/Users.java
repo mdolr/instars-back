@@ -5,8 +5,11 @@ import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
 import com.google.api.server.spi.response.NotFoundException;
 import com.google.api.server.spi.response.UnauthorizedException;
+import com.google.api.server.spi.response.ConflictException;
 import com.google.appengine.api.datastore.*;
+import com.tinyinsta.common.AvailableBatches;
 import com.tinyinsta.common.Constants;
+import com.tinyinsta.common.ExistenceQuery;
 
 import javax.inject.Named;
 import java.util.ArrayList;
@@ -94,6 +97,74 @@ public class Users {
             return new UserDTO(newUser, false, 0);
         }
     }
+
+    @ApiMethod(name = "users.getRandom", httpMethod = "get", path = "users/explore",
+               clientIds = { Constants.WEB_CLIENT_ID },
+               audiences = { Constants.WEB_CLIENT_ID },
+               scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
+    public List<UserDTO> getRandom(User reqUser) throws UnauthorizedException, EntityNotFoundException, ConflictException {
+        if(reqUser == null) {
+            throw new UnauthorizedException("Authorization required");
+        }
+
+        // Get a random date between 1 january 1970 and now
+        Date randomDate = new Date((long) (Math.random() * (new Date().getTime() - new Date(0).getTime())));
+
+        // Query the datastore to get the users
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+        // Verify that the user exists
+        Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
+
+        // Then query 5 users before the random date
+        Query queryAfter = new Query("User")
+            .addSort("createdAt", Query.SortDirection.DESCENDING)
+            .setFilter(new Query.FilterPredicate("createdAt", Query.FilterOperator.LESS_THAN, randomDate));
+
+        // And then query 5 other users after the random date
+        Query queryBefore = new Query("User")
+            .addSort("createdAt", Query.SortDirection.ASCENDING)
+            .setFilter(new Query.FilterPredicate("createdAt", Query.FilterOperator.GREATER_THAN, randomDate));
+
+        // Get the results
+        PreparedQuery preparedAfter = datastore.prepare(queryAfter);
+        PreparedQuery preparedBefore = datastore.prepare(queryBefore);
+
+        // Get the results
+        List<Entity> after = preparedAfter.asList(FetchOptions.Builder.withLimit(5));
+        List<Entity> before = preparedBefore.asList(FetchOptions.Builder.withLimit(5));
+
+        // Create a list of UserDTO
+        List<UserDTO> users = new ArrayList<>();
+
+        AvailableBatches availableBatches = new AvailableBatches("UserFollower", user.getKey());
+
+        for (Entity resultUser : after) {
+            int followersCount = availableBatches.getSizeCount()+(new Integer(user.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE);
+            resultUser.setProperty("followers", followersCount);
+
+            Boolean hasFollowed = (Boolean) new ExistenceQuery().check("UserFollower", user.getKey(), reqUser.getId());
+            resultUser.setProperty("hasFollowed", hasFollowed);
+
+            users.add(new UserDTO(resultUser, true, followersCount));
+        }
+
+        
+        for (Entity resultUser : before) {
+            int followersCount = availableBatches.getSizeCount()+(new Integer(user.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE);
+            resultUser.setProperty("followers", followersCount);
+
+            Boolean hasFollowed = (Boolean) new ExistenceQuery().check("UserFollower", user.getKey(), reqUser.getId());
+            resultUser.setProperty("hasFollowed", hasFollowed);
+
+            users.add(new UserDTO(resultUser, true, followersCount));
+        }
+
+        // Return the list
+        return users;
+    }
+
+
 
     @ApiMethod(name = "users.updateSelf", httpMethod = "put", path = "users/me",
             clientIds = { Constants.WEB_CLIENT_ID },

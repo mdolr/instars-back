@@ -14,6 +14,7 @@ public class UserDTO {
   public String email;
   public String pictureURL;
   public long followers;
+  public Boolean hasFollowed;
 
   public UserDTO(Entity user, Boolean hideSensitiveData, long followers) { 
     this.id = (String) user.getProperty("id");
@@ -23,6 +24,7 @@ public class UserDTO {
     this.handle = (String) user.getProperty("handle");
     this.email = (String) user.getProperty("email");
     this.pictureURL = (String) user.getProperty("pictureURL");
+    this.hasFollowed = (Boolean) user.getProperty("hasFollowed");
     this.followers = followers;
 
     if (hideSensitiveData) {
