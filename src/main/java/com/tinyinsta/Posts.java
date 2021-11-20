@@ -21,20 +21,23 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
+import com.tinyinsta.res.PostDTO;
+import com.tinyinsta.res.UrlDTO;
+
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Posts {
 
     @ApiMethod(name = "posts.getOne", httpMethod = "get", path = "posts/{id}")
-    public Entity getOne(@Named("id") String postId) throws EntityNotFoundException {
+    public PostDTO getOne(@Named("id") String postId) throws EntityNotFoundException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         Entity post = datastore.get(KeyFactory.createKey("Post", postId));
 
-        return post;
+        return new PostDTO(post, 0); //TODO: Add like number and full retrieval of post
     }
 
     @ApiMethod(name = "posts.getAll", httpMethod = "get", path = "posts")
-    public List<Entity> getAll(@Nullable @Named("userId") String userId) {
+    public ArrayList<PostDTO> getAll(@Nullable @Named("userId") String userId) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         Query q = new Query("Post").addSort("createdAt", Query.SortDirection.DESCENDING);
@@ -44,13 +47,19 @@ public class Posts {
         }
 
         PreparedQuery pq = datastore.prepare(q);
-        List<Entity> result = pq.asList(FetchOptions.Builder.withDefaults());
+        List<Entity> results = pq.asList(FetchOptions.Builder.withDefaults());
 
-        return result;
+        ArrayList<PostDTO> posts = new ArrayList<PostDTO>();
+        
+        for(Entity post : results) {
+            posts.add(new PostDTO(post, 0)); //TODO: Add like number and full retrieval of post 
+        }
+
+        return posts;
     }
 
     @ApiMethod(name = "posts.requestSignedURL", httpMethod = "get", path = "signedURL")
-    public URL requestSignedURL(@Named("fileName") String fileName) {
+    public UrlDTO requestSignedURL(@Named("fileName") String fileName) {
         String projectId = "tinyinsta-web";
         String bucketName = "signed-urls-upload";
 
@@ -74,14 +83,15 @@ public class Posts {
 
         URL url = storage.signUrl(blobInfo, 15, TimeUnit.MINUTES, Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
                 Storage.SignUrlOption.withExtHeaders(extensionHeaders), Storage.SignUrlOption.withV4Signature());
-        return url;
+        
+        return new UrlDTO(url.toString());
     }
 
     @ApiMethod(name = "posts.uploadPost", httpMethod = "post", path = "posts",
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-    public Entity uploadPost(
+    public PostDTO uploadPost(
             User reqUser,
             @Named("url") String url,
             @Named("title") String title,
@@ -98,14 +108,16 @@ public class Posts {
         Transaction txn = datastore.beginTransaction();
 
         try {
-            Key postKey = KeyFactory.createKey("Post", UUID.randomUUID().toString());
+            String postId = UUID.randomUUID().toString();
+            Key postKey = KeyFactory.createKey("Post", postId);
 
             Entity post = new Entity(postKey);
-            post.setProperty("url", url);// TODO: Change url to store url
-            post.setProperty("userId", user.getProperty("id").toString());
+            post.setProperty("id", postId);
+            post.setProperty("mediaURL", url);// TODO: Change url to store url
+            post.setProperty("authorId", user.getProperty("id").toString());
             post.setProperty("title", title);
             post.setProperty("description", description);
-            post.setProperty("createdAt", new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss:SSS").format(new Date()));
+            post.setProperty("createdAt", new Date());
             post.setProperty("fullBatches", 0);
 
             new PostReceivers().createEntity(user, post);
@@ -114,12 +126,12 @@ public class Posts {
             for (int i = 1; i <= nbBuckets; i++) {
                 new PostLikers().createEntity(postKey);
             }
-
+           
             datastore.put(post);
 
             txn.commit();
 
-            return post;
+            return new PostDTO(post, 0);
         } finally {
             if (txn.isActive()) {
                 txn.rollback();

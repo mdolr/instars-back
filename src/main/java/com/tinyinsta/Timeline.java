@@ -48,7 +48,7 @@ public class Timeline {
             int likesCount = availableBatches.getSizeCount()+(new Integer(post.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE);
             post.setProperty("likes", likesCount);
 
-            Entity user = datastore.get(KeyFactory.createKey("User", post.getProperty("userId").toString()));
+            Entity user = datastore.get(KeyFactory.createKey("User", post.getProperty("authorId").toString()));
 
             post.setProperty("userName", user.getProperty("name"));
             post.setProperty("userPicture", user.getProperty("pictureURL"));
