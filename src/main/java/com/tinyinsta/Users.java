@@ -102,6 +102,7 @@ public class Users {
                     userFollowers.setProperty("size", 0);
                 }
 
+                userFollowers.setProperty("parentId", reqUser.getId());
                 userFollowers.setProperty("updatedAt", new Date());
 
                 // Put the UserFollowers entity in the datastore
@@ -154,13 +155,13 @@ public class Users {
         // Create a list of UserDTO
         List<UserDTO> users = new ArrayList<>();
 
-        AvailableBatches availableBatches = new AvailableBatches("UserFollower", user.getKey());
-
+        
         for (Entity resultUser : after) {
-            int followersCount = availableBatches.getSizeCount()+(new Integer(user.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE) - 1;
+            AvailableBatches availableBatches = new AvailableBatches("UserFollower", resultUser.getKey(), (String) resultUser.getProperty("id"));
+            int followersCount = availableBatches.getSizeCount()+(new Integer(resultUser.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE) - 1;
             resultUser.setProperty("followers", followersCount);
 
-            Boolean hasFollowed = (Boolean) new ExistenceQuery().check("UserFollower", user.getKey(), reqUser.getId());
+            Boolean hasFollowed = (Boolean) new ExistenceQuery().check("UserFollower", resultUser.getKey(), reqUser.getId());
             resultUser.setProperty("hasFollowed", hasFollowed);
 
             users.add(new UserDTO(resultUser, true, followersCount));
@@ -168,10 +169,11 @@ public class Users {
 
         
         for (Entity resultUser : before) {
-            int followersCount = availableBatches.getSizeCount()+(new Integer(user.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE) - 1;
+            AvailableBatches availableBatches = new AvailableBatches("UserFollower", resultUser.getKey(), (String) resultUser.getProperty("id"));
+            int followersCount = availableBatches.getSizeCount()+(new Integer(resultUser.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE) - 1;
             resultUser.setProperty("followers", followersCount);
 
-            Boolean hasFollowed = (Boolean) new ExistenceQuery().check("UserFollower", user.getKey(), reqUser.getId());
+            Boolean hasFollowed = (Boolean) new ExistenceQuery().check("UserFollower", resultUser.getKey(), reqUser.getId());
             resultUser.setProperty("hasFollowed", hasFollowed);
 
             users.add(new UserDTO(resultUser, true, followersCount));

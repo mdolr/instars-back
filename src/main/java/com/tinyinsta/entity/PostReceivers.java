@@ -22,6 +22,7 @@ public class PostReceivers {
 
                 receivers.setProperty("createdAt", post.getProperty("createdAt"));
                 receivers.setProperty("batch", follower.getProperty("batch"));
+                receivers.setProperty("parentId", post.getProperty("postId"));
                 datastore.put(receivers);
             }
         }

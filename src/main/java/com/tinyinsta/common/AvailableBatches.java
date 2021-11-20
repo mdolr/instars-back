@@ -11,15 +11,14 @@ public class AvailableBatches {
     private List<Entity> availableBatches;
     private int number;
 
-    public AvailableBatches(String kind, Key ancestorKey) {
+    public AvailableBatches(String kind, Key ancestorKey, String ancestorId) {
         this.kind = kind;
         this.ancestorKey = ancestorKey;
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         Query getBatchesQuery = new Query(this.kind)
-                .setAncestor(this.ancestorKey)
-                .setFilter(new Query.FilterPredicate("size", Query.FilterOperator.LESS_THAN, Constants.MAX_BATCH_SIZE));
+                .setFilter(Query.CompositeFilterOperator.and(new Query.FilterPredicate("size", Query.FilterOperator.LESS_THAN, Constants.MAX_BATCH_SIZE), new Query.FilterPredicate("parentId", Query.FilterOperator.EQUAL, ancestorId)));
 
         this.availableBatches =
                 datastore.prepare(getBatchesQuery).asQueryResultList(FetchOptions.Builder.withDefaults());

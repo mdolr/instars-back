@@ -44,7 +44,7 @@ public class Follows {
 
     Transaction txn = datastore.beginTransaction();
 
-    AvailableBatches availableBatches = new AvailableBatches("UserFollower", target.getKey());
+    AvailableBatches availableBatches = new AvailableBatches("UserFollower", target.getKey(), (String) target.getProperty("id"));
     
     int followersCount;
 

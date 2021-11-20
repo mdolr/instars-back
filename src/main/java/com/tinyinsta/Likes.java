@@ -42,7 +42,7 @@ public class Likes {
 
         Transaction txn = datastore.beginTransaction();
 
-        AvailableBatches availableBatches= new AvailableBatches("PostLiker", post.getKey());
+        AvailableBatches availableBatches= new AvailableBatches("PostLiker", post.getKey(), (String) post.getProperty("id"));
 
         int likesCount;
 
