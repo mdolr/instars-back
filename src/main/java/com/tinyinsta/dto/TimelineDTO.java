@@ -9,13 +9,13 @@ import java.util.*;
 import com.google.appengine.api.datastore.*;
 
 public class TimelineDTO {
-  public String before;
-  public String after;
+  public String previous;
+  public String next;
   public List<PostDTO> posts;
 
-  public TimelineDTO(List<PostDTO> posts, String before, String after) { 
+  public TimelineDTO(List<PostDTO> posts, String previous, String next) { 
       this.posts = posts;
-      this.before = before;
-      this.after = after;
+      this.previous = previous;
+      this.next = next;
   }
 }

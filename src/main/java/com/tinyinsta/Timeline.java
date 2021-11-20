@@ -3,11 +3,14 @@ package com.tinyinsta;
 import com.google.api.server.spi.auth.common.User;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
+import com.google.api.server.spi.config.Named;
+import com.google.api.server.spi.config.Nullable;
 import com.google.api.server.spi.response.UnauthorizedException;
 import com.google.appengine.api.datastore.*;
 import com.tinyinsta.common.AvailableBatches;
 import com.tinyinsta.common.Constants;
 import com.tinyinsta.dto.PostDTO;
+import com.tinyinsta.dto.TimelineDTO;
 import com.tinyinsta.common.ExistenceQuery;
 import com.google.api.server.spi.response.ConflictException;
 
@@ -24,21 +27,35 @@ public class Timeline {
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-    public List<PostDTO> getTimeline(User reqUser) throws UnauthorizedException, EntityNotFoundException, ConflictException {
+    public TimelineDTO getTimeline(User reqUser, @Nullable @Named("after") String after, @Nullable @Named("before") String before) throws UnauthorizedException, EntityNotFoundException, ConflictException {
         // If the user is not logged in : throw an error or redirect to the login page
         if (reqUser == null) {
             throw new UnauthorizedException("Authorization required");
         }
+
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+        FetchOptions fetchOptions = FetchOptions.Builder.withLimit(2);
+
+        if (after != null) {
+            fetchOptions.startCursor(Cursor.fromWebSafeString(after));
+        }
 
         Query query = new Query("PostReceiver").addSort("createdAt", Query.SortDirection.DESCENDING);
         query.setFilter(new Query.FilterPredicate("batch", Query.FilterOperator.EQUAL, reqUser.getId()));
-        List<Entity> postReceivers = datastore.prepare(query).asList(FetchOptions.Builder.withLimit(20));
+
+        QueryResultList<Entity> postReceivers = datastore.prepare(query).asQueryResultList(fetchOptions);
+        
+        Cursor cursor = postReceivers.getCursor();
+        String nextCursor = cursor.toWebSafeString();
+        String previousCursor = cursor.reverse().toWebSafeString();
 
         List<Key> postKeys = new ArrayList<>();
+
         for(Entity postReceiver : postReceivers){
             postKeys.add(postReceiver.getParent());
         }
+
         Iterable<Key> postKeysIterable = postKeys;
 
         Map<Key,Entity> results = datastore.get(postKeysIterable);
@@ -63,10 +80,10 @@ public class Timeline {
         }
 
         Collections.sort(posts, new Comparator<PostDTO>() {
-          public int compare(PostDTO a, PostDTO b) {
-            return b.createdAt.compareTo(a.createdAt);
-          }});
+            public int compare(PostDTO a, PostDTO b) {
+              return b.createdAt.compareTo(a.createdAt);
+            }});
 
-        return posts;
+        return new TimelineDTO(posts, previousCursor, nextCursor);
     }
 }
