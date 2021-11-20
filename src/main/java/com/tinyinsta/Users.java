@@ -14,13 +14,15 @@ import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
+import com.tinyinsta.res.UserDTO;
+
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Users {
     @ApiMethod(name = "users.getSelf", httpMethod = "get", path = "users/me",
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-    public Entity getSelf(User reqUser) throws UnauthorizedException, EntityNotFoundException {
+    public UserDTO getSelf(User reqUser) throws UnauthorizedException, EntityNotFoundException {
         // If the user is not logged in : throw an error or redirect to the login page
         if (reqUser == null) {
             throw new UnauthorizedException("Authorization required");
@@ -33,7 +35,7 @@ public class Users {
         try {
             // Get entity by key id
             Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
-            return user;
+            return new UserDTO(user, false);
         }
 
         // If the user isn't already in the datastore
@@ -89,7 +91,7 @@ public class Users {
             // Put the entities in the datastore
             datastore.put(newUser);
 
-            return newUser;
+            return new UserDTO(newUser, false);
         }
     }
 
@@ -97,7 +99,7 @@ public class Users {
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-    public Entity updateSelf(User reqUser, Map<String, Object> reqBody)
+    public UserDTO updateSelf(User reqUser, Map<String, Object> reqBody)
             throws UnauthorizedException, EntityNotFoundException {
         // If the user is not logged in : throw an error or redirect to the login page
         if (reqUser == null) {
@@ -128,12 +130,12 @@ public class Users {
         // Update each parameter
         datastore.put(user);
 
-        return user;
+        return new UserDTO(user, false);
     }
 
     // A route to get an user by its handle
     @ApiMethod(name = "users.getUserByHandle", httpMethod = "get", path = "users/handle/{handle}")
-    public Entity getUserByHandle(@Named("handle") String handle) throws NotFoundException, EntityNotFoundException {
+    public UserDTO getUserByHandle(@Named("handle") String handle) throws NotFoundException, EntityNotFoundException {
         // Query the datastore to get the user by its handle
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Query query = new Query("User").setFilter(new Query.FilterPredicate("handle", Query.FilterOperator.EQUAL, handle));
@@ -146,6 +148,6 @@ public class Users {
         // Remove sensitive data before returning the user (only in the response do not update the datastore)
         user.removeProperty("email");
 
-        return user;
+        return new UserDTO(user, true);
     }
 }
