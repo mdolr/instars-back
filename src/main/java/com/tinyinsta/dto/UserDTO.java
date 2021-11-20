@@ -25,7 +25,7 @@ public class UserDTO {
     this.email = (String) user.getProperty("email");
     this.pictureURL = (String) user.getProperty("pictureURL");
     this.hasFollowed = (Boolean) user.getProperty("hasFollowed");
-    this.followers = followers;
+    this.followers = followers < 0 ? 0 : followers;
 
     if (hideSensitiveData) {
       this.email = null;

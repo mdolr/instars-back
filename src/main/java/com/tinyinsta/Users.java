@@ -157,7 +157,7 @@ public class Users {
         AvailableBatches availableBatches = new AvailableBatches("UserFollower", user.getKey());
 
         for (Entity resultUser : after) {
-            int followersCount = availableBatches.getSizeCount()+(new Integer(user.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE);
+            int followersCount = availableBatches.getSizeCount()+(new Integer(user.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE) - 1;
             resultUser.setProperty("followers", followersCount);
 
             Boolean hasFollowed = (Boolean) new ExistenceQuery().check("UserFollower", user.getKey(), reqUser.getId());
@@ -168,7 +168,7 @@ public class Users {
 
         
         for (Entity resultUser : before) {
-            int followersCount = availableBatches.getSizeCount()+(new Integer(user.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE);
+            int followersCount = availableBatches.getSizeCount()+(new Integer(user.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE) - 1;
             resultUser.setProperty("followers", followersCount);
 
             Boolean hasFollowed = (Boolean) new ExistenceQuery().check("UserFollower", user.getKey(), reqUser.getId());
