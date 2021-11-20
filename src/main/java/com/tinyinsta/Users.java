@@ -120,8 +120,8 @@ public class Users {
         mutableVariables.add("pictureURL");
 
         for (Map.Entry<String, Object> entry : reqBody.entrySet()) {
-            String key = entry.getKey().toLowerCase();
-
+            String key = entry.getKey();
+            
             if(mutableVariables.contains(key)) {
                 user.setProperty(entry.getKey(), entry.getValue()); // Update the property
             }
