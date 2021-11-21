@@ -45,18 +45,62 @@ public class Timeline {
         List<Key> postKeys = new ArrayList<>();
 
         Filter belongsFilter = new FilterPredicate("batch", FilterOperator.EQUAL, reqUser.getId());
-
-
+        
         for(int i = 0; i < Constants.TIMELINE_BUCKETS; i++) {
-            System.out.println("i = " + i);
-            System.out.println("after= " + String.valueOf(i) + (after == null ? "-" : ("-" + after)));
-            Filter bottomLimitFilter = new FilterPredicate("parentId", Query.FilterOperator.GREATER_THAN, String.valueOf(i));            
-            Filter upperLimitFilter = new FilterPredicate("parentId", Query.FilterOperator.LESS_THAN, after == null ? String.valueOf(i + 1) + "-" : String.valueOf(i) + "-" + after);            
+            Key bottomKeyLimit = null;
+            Key upperKeyLimit = null;
+
+            Filter bottomLimitFilter = null;
+            Filter upperLimitFilter = null;
+            CompositeFilter filter = null;
+
+            Query firstPostReceiver = new Query("PostReceiver")
+                .setFilter(new FilterPredicate("parentId", Query.FilterOperator.GREATER_THAN_OR_EQUAL, after == null ? String.valueOf(i) : String.valueOf(i) + "-" + after))
+                .setKeysOnly();
+
+            PreparedQuery firstPostReceiverPq = datastore.prepare(firstPostReceiver);
+            List<Entity> firstPostReceiverEntities = firstPostReceiverPq.asList(FetchOptions.Builder.withLimit(1));
             
-            CompositeFilter filter = CompositeFilterOperator.and(belongsFilter, bottomLimitFilter, upperLimitFilter);
+            if(firstPostReceiverEntities.size() > 0) {
+                bottomKeyLimit = firstPostReceiverEntities.get(0).getKey();
+                System.out.println("BottomKey for i =" + i + " is " + bottomKeyLimit);
+                bottomLimitFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, Query.FilterOperator.GREATER_THAN, bottomKeyLimit);            
+            }
+
+            if(i != Constants.TIMELINE_BUCKETS - 1) {
+                Query lastPostReceiver = new Query("PostReceiver")
+                    .setFilter(new FilterPredicate("parentId", Query.FilterOperator.GREATER_THAN, String.valueOf(i + 1)))
+                    .setKeysOnly();
+
+                PreparedQuery lastPostReceiverPq = datastore.prepare(lastPostReceiver);
+                List<Entity> lastPostReceiverEntities = lastPostReceiverPq.asList(FetchOptions.Builder.withLimit(1));
+              
+                if(lastPostReceiverEntities.size() > 0) {
+                    upperKeyLimit = lastPostReceiverEntities.get(0).getKey();
+                    System.out.println("UpperKey for i =" + i + " is " + upperKeyLimit);
+                    upperLimitFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, Query.FilterOperator.LESS_THAN, upperKeyLimit);            
+                }
+            }
+
+            // Je vais en enfer mais ça marche menfou
+            if(bottomLimitFilter != null && upperLimitFilter != null) {
+                filter = CompositeFilterOperator.and(belongsFilter, bottomLimitFilter, upperLimitFilter);
+            }
+
+            else if(bottomLimitFilter != null && upperLimitFilter == null) {
+                filter = CompositeFilterOperator.and(belongsFilter, bottomLimitFilter);
+            }
+
+            else if(bottomLimitFilter == null && upperLimitFilter != null) {
+                filter = CompositeFilterOperator.and(belongsFilter, upperLimitFilter);
+            }
+
+            else {
+                filter = null;
+            }
 
             Query query = new Query("PostReceiver")
-                .setFilter(filter)
+                .setFilter(filter != null ? filter : belongsFilter)
                 .setKeysOnly();
 
             QueryResultList<Entity> postReceivers = datastore.prepare(query).asQueryResultList(fetchOptions);
@@ -74,8 +118,13 @@ public class Timeline {
               return b.getName().split("-")[1].compareTo(a.getName().split("-")[1]);
             }
           });
-        
-          postKeys = postKeys.subList(0, Constants.PAGINATION_SIZE);
+       
+          // Je vais encore en enfer mais menfou
+          if(postKeys.size() > Constants.PAGINATION_SIZE) {
+            postKeys = postKeys.subList(0, Constants.PAGINATION_SIZE);
+          } else {
+            postKeys = postKeys.subList(0, postKeys.size());
+          }
         }
 
         Iterable<Key> postKeysIterable = postKeys;
