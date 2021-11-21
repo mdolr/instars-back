@@ -95,7 +95,7 @@ public class Posts {
             e.printStackTrace();
         }
 
-        Storage storage = StorageOptions.newBuilder().setProjectId(projectId).setCredentials(credentials).build()
+        Storage storage = StorageOptions.newBuilder().setProjectId(projectId)/*.setCredentials(credentials)*/.build()
                 .getService();
 
         // Define Resource
@@ -178,7 +178,7 @@ public class Posts {
             e.printStackTrace();
         }
         
-        Storage storage = StorageOptions.newBuilder().setProjectId(projectId).setCredentials(credentials).build()
+        Storage storage = StorageOptions.newBuilder().setProjectId(projectId)/*.setCredentials(credentials)*/.build()
                 .getService();
 
         Bucket bucket = storage.get(bucketName);
