@@ -7,6 +7,7 @@ import com.google.api.server.spi.config.Named;
 import com.google.api.server.spi.config.Nullable;
 import com.google.api.server.spi.response.UnauthorizedException;
 import com.google.appengine.api.datastore.*;
+import com.google.appengine.api.datastore.Query.*;
 import com.tinyinsta.common.AvailableBatches;
 import com.tinyinsta.common.Constants;
 import com.tinyinsta.dto.PostDTO;
@@ -27,7 +28,7 @@ public class Timeline {
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-    public PaginationDTO getTimeline(User reqUser, @Nullable @Named("after") String after, @Nullable @Named("before") String before) throws UnauthorizedException, EntityNotFoundException, ConflictException {
+    public PaginationDTO getTimeline(User reqUser, @Nullable @Named("after") String after) throws UnauthorizedException, EntityNotFoundException, ConflictException {
         // If the user is not logged in : throw an error or redirect to the login page
         if (reqUser == null) {
             throw new UnauthorizedException("Authorization required");
@@ -41,29 +42,44 @@ public class Timeline {
         Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
 
         FetchOptions fetchOptions = FetchOptions.Builder.withLimit(Constants.PAGINATION_SIZE);
-
-        if (after != null) {
-            fetchOptions.startCursor(Cursor.fromWebSafeString(after));
-        }
-
-        Query query = new Query("PostReceiver").addSort("createdAt", Query.SortDirection.DESCENDING);
-        query.setFilter(new Query.FilterPredicate("batch", Query.FilterOperator.EQUAL, reqUser.getId()));
-
-        QueryResultList<Entity> postReceivers = datastore.prepare(query).asQueryResultList(fetchOptions);
-        
-        String nextCursor = postReceivers.getCursor().toWebSafeString();
-        String previousCursor = nextCursor;
-
         List<Key> postKeys = new ArrayList<>();
 
-        for(Entity postReceiver : postReceivers){
-            postKeys.add(postReceiver.getParent());
+        Filter belongsFilter = new FilterPredicate("batch", FilterOperator.EQUAL, reqUser.getId());
+
+
+        for(int i = 0; i < Constants.TIMELINE_BUCKETS; i++) {
+            System.out.println("i = " + i);
+            System.out.println("after= " + String.valueOf(i) + (after == null ? "-" : ("-" + after)));
+            Filter bottomLimitFilter = new FilterPredicate("parentId", Query.FilterOperator.GREATER_THAN, String.valueOf(i));            
+            Filter upperLimitFilter = new FilterPredicate("parentId", Query.FilterOperator.LESS_THAN, after == null ? String.valueOf(i + 1) + "-" : String.valueOf(i) + "-" + after);            
+            
+            CompositeFilter filter = CompositeFilterOperator.and(belongsFilter, bottomLimitFilter, upperLimitFilter);
+
+            Query query = new Query("PostReceiver")
+                .setFilter(filter)
+                .setKeysOnly();
+
+            QueryResultList<Entity> postReceivers = datastore.prepare(query).asQueryResultList(fetchOptions);
+            
+            for(Entity postReceiver : postReceivers){
+                postKeys.add(postReceiver.getParent());
+            }
+        }
+
+        if(postKeys.size() > 0) {
+          // TODO: Write a custom sort that stops after the 5 first keys have been sorted
+          // because we will drop the rest
+          Collections.sort(postKeys, new Comparator<Key>() {
+            public int compare(Key a, Key b) {
+              return b.getName().split("-")[1].compareTo(a.getName().split("-")[1]);
+            }
+          });
+        
+          postKeys = postKeys.subList(0, Constants.PAGINATION_SIZE);
         }
 
         Iterable<Key> postKeysIterable = postKeys;
-
         Map<Key,Entity> results = datastore.get(postKeysIterable);
-
         List<PostDTO> posts = new ArrayList<>();
 
         // Recover likes and user info
@@ -87,6 +103,9 @@ public class Timeline {
             public int compare(PostDTO a, PostDTO b) {
               return b.createdAt.compareTo(a.createdAt);
             }});
+          
+        String previousCursor = posts.size() > 0 ? String.valueOf(posts.get(0).createdAt.getTime()) : null;
+        String nextCursor = posts.size() > 0 ? String.valueOf(posts.get(posts.size() - 1).createdAt.getTime()) : null;
 
         return new PaginationDTO(posts, previousCursor, nextCursor);
     }

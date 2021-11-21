@@ -11,6 +11,7 @@ import com.google.cloud.storage.*;
 import com.tinyinsta.common.Constants;
 import com.tinyinsta.entity.PostLikers;
 import com.tinyinsta.entity.PostReceivers;
+import com.tinyinsta.common.RandomGenerator;
 
 import javax.annotation.Nullable;
 import javax.inject.Named;
@@ -78,7 +79,9 @@ public class Posts {
         String projectId = "tinyinsta-web";
         String bucketName = "instars-23pnm1d4";
 
-        String postId = UUID.randomUUID().toString();
+        int randomBucket = new RandomGenerator().get(0, Constants.TIMELINE_BUCKETS - 1);
+
+        String postId = String.valueOf(randomBucket) + String.valueOf(-1 * new Date().getTime()); //UUID.randomUUID().toString();
         String pictureId = UUID.randomUUID().toString();
 
         String fileName = (String) reqBody.get("fileName");
