@@ -28,7 +28,6 @@ import com.google.api.server.spi.response.NotFoundException;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Posts {
-/*
     @ApiMethod(name = "posts.getOne", httpMethod = "get", path = "posts/{id}")
     public PostDTO getOne(@Named("id") String postId) throws EntityNotFoundException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -59,7 +58,7 @@ public class Posts {
 
         return posts;
     }
-
+    
     @ApiMethod(name = "posts.uploadPost", httpMethod = "post", path = "posts",
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
@@ -114,11 +113,9 @@ public class Posts {
             post.setProperty("authorId", user.getProperty("id").toString());
             post.setProperty("description", reqBody.get("description"));
             post.setProperty("createdAt", new Date());
-            post.setProperty("fullBatches", 0);
             post.setProperty("published", false);
-
+            post.setProperty("batchIndex", null);
             
-           
             datastore.put(post);
             txn.commit();
 
@@ -157,8 +154,6 @@ public class Posts {
 
         String objectName = (String) post.getProperty("pictureName");
 
-       
-        
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build()
                 .getService();
 
@@ -174,23 +169,30 @@ public class Posts {
         Transaction txn = datastore.beginTransaction();
 
         try {
-          new PostReceivers().createEntity(user, post);
-          
-          int nbBuckets = Constants.LIKES_MAX_BUCKETS_NUMBER;
-          for (int i = 0; i < nbBuckets; i++) {
-              new PostLikers().createEntity(post.getKey(), i, (String) post.getProperty("id"));
-          }
-          
-          post.setProperty("published", true);
+            new PostReceivers().createEntity(user, post);
+            
+            int nbBuckets = Constants.LIKES_MAX_BUCKETS_NUMBER;
 
-          datastore.put(post);
-          txn.commit();
+            ArrayList<Integer> batchIndex = new ArrayList<Integer>();
 
-          return new PostDTO(post, user, 0);
+            for (int i = 0; i < nbBuckets; i++) {
+              new PostLikers().createEntity(post, batchIndex.size());
+              batchIndex.add(0);
+            }
+
+            post.setProperty("batchIndex", batchIndex);
+            post.setProperty("published", true);
+
+            datastore.put(post);
+            txn.commit();
+
+            return new PostDTO(post, user, 0);
         } finally {
             if (txn.isActive()) {
                 txn.rollback();
+            } else {
+                datastore.put(user);
             }
         }
-    }*/
+    }
 }

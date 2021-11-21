@@ -126,7 +126,7 @@ public class Users {
         }
     }
 
-    /*@ApiMethod(name = "users.getRandom", httpMethod = "get", path = "users/explore",
+    @ApiMethod(name = "users.getRandom", httpMethod = "get", path = "users/explore",
                clientIds = { Constants.WEB_CLIENT_ID },
                audiences = { Constants.WEB_CLIENT_ID },
                scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
@@ -167,8 +167,8 @@ public class Users {
 
         
         for (Entity resultUser : after) {
-            AvailableBatches availableBatches = new AvailableBatches("UserFollower", resultUser.getKey(), (String) resultUser.getProperty("id"));
-            int followersCount = availableBatches.getSizeCount()+(new Integer(resultUser.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE) - 1;
+            AvailableBatches availableBatches = new AvailableBatches(resultUser, "UserFollower");
+            int followersCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE) - 1;
             resultUser.setProperty("followers", followersCount);
 
             Boolean hasFollowed = (Boolean) new ExistenceQuery().check("UserFollower", resultUser.getKey(), reqUser.getId());
@@ -179,8 +179,8 @@ public class Users {
 
         
         for (Entity resultUser : before) {
-            AvailableBatches availableBatches = new AvailableBatches("UserFollower", resultUser.getKey(), (String) resultUser.getProperty("id"));
-            int followersCount = availableBatches.getSizeCount()+(new Integer(resultUser.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE) - 1;
+            AvailableBatches availableBatches = new AvailableBatches(resultUser, "UserFollower");
+            int followersCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE) - 1;
             resultUser.setProperty("followers", followersCount);
 
             Boolean hasFollowed = (Boolean) new ExistenceQuery().check("UserFollower", resultUser.getKey(), reqUser.getId());
@@ -191,7 +191,7 @@ public class Users {
 
         // Return the list
         return users;
-    }*/
+    }
 
 
 

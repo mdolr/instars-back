@@ -50,11 +50,17 @@ public class Follows {
 
     try {
         Entity availableBatch = availableBatches.getOneRandom();
+
+        // Retrieve the i part of the i + '-' + parentId
+        String batchId = (String) availableBatch.getProperty("id");
+        int batchNumber = Integer.valueOf(batchId.split("-")[0]);
+        
         ArrayList<String> batch = (ArrayList<String>) availableBatch.getProperty("batch");
 
         if(batch == null) {
             batch = new ArrayList<>();
         }
+        
         // Append the user to the batch
         batch.add(reqUser.getId());
 
@@ -67,10 +73,16 @@ public class Follows {
         // -1 to remove self follower from count
         followersCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE) - 1;
 
+        // Update the batch index when a batch is completely filled
         if(batch.size() >= Constants.MAX_BATCH_SIZE) {
-            user.setProperty("fullBatches", new Integer(user.getProperty("fullBatches").toString()) + 1);
+            ArrayList<Integer> batchIndex = (ArrayList<Integer>) user.getProperty("batchIndex");
+            batchIndex.set(batchNumber, 1);
+
+            user.setProperty("batchIndex", batchIndex);
             datastore.put(user);
         }
+
+        // TODO: Create new UserFollower if all filled ???
 
         // Then put the batch back in the datastore
         datastore.put(availableBatch);

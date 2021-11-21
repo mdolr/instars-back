@@ -19,7 +19,7 @@ import com.tinyinsta.dto.PostDTO;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Likes {
-/*    @ApiMethod(name = "likes.updateLikes", httpMethod = "post", path = "posts/{id}/likes",
+   @ApiMethod(name = "likes.updateLikes", httpMethod = "post", path = "posts/{id}/likes",
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
@@ -42,7 +42,7 @@ public class Likes {
 
         Transaction txn = datastore.beginTransaction();
 
-        AvailableBatches availableBatches= new AvailableBatches("PostLiker", post.getKey(), (String) post.getProperty("id"));
+        AvailableBatches availableBatches= new AvailableBatches(post, "PostLiker");
 
         int likesCount;
 
@@ -50,9 +50,14 @@ public class Likes {
             Entity availableBatch = availableBatches.getOneRandom();
             ArrayList<String> batch = (ArrayList<String>) availableBatch.getProperty("batch");
 
+            // Retrieve the i part of the i + '-' + parentId
+            String batchId = (String) availableBatch.getProperty("id");
+            int batchNumber = Integer.valueOf(batchId.split("-")[0]);
+
             if(batch == null) {
                 batch = new ArrayList<>();
             }
+            
             // Append the user to the batch
             batch.add(reqUser.getId());
 
@@ -62,12 +67,16 @@ public class Likes {
             availableBatch.setProperty("updatedAt", new Date());
 
             // Count all available batches size + completed batches number * batch max size
-            likesCount = availableBatches.getSizeCount()+(new Integer(post.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE);
+            likesCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE);
 
+            // Update the batch index when a batch is completely filled
             if(batch.size() >= Constants.MAX_BATCH_SIZE) {
-                post.setProperty("fullBatches", new Integer(post.getProperty("fullBatches").toString()) + 1);
-                datastore.put(post);
-            }
+              ArrayList<Integer> batchIndex = (ArrayList<Integer>) user.getProperty("batchIndex");
+              batchIndex.set(batchNumber, 1);
+
+              user.setProperty("batchIndex", batchIndex);
+              datastore.put(user);
+          }
 
             datastore.put(availableBatch);
 
@@ -77,13 +86,19 @@ public class Likes {
                 txn.rollback();
             }
         }
+        int newBucketsCount = Constants.LIKES_MAX_BUCKETS_NUMBER - availableBatches.getNonFullBatchesCount();
+        
+        if(newBucketsCount > 0) {
+          ArrayList<Integer> batchIndex = (ArrayList<Integer>) user.getProperty("batchIndex");
 
-        for (int i = 0; i < Constants.LIKES_MAX_BUCKETS_NUMBER-availableBatches.getNumber(); i++) {
-            new PostLikers().createEntity(post.getKey());
+          for (int i = 0; i < newBucketsCount; i++) {
+              new PostLikers().createEntity(post, batchIndex.size());
+              batchIndex.add(0);
+          }
         }
 
         post.setProperty("hasLiked", true);
         
         return new PostDTO(post, null, likesCount);
-    }*/
+    }
 }

@@ -11,6 +11,7 @@ public class AvailableBatches {
     private Key ancestorKey;
     private List<Entity> availableBatches;
     public int fullBatches;
+    public int nonFullBatches;
     public Entity entity;
 
     public AvailableBatches(Entity entity, String kind) {
@@ -31,9 +32,14 @@ public class AvailableBatches {
 
                 if (batchState == 0) {
                     String childId = String.valueOf(i) + "-" + ((String) entity.getProperty("id"));
+                    
                     Key key = KeyFactory.createKey(entity.getKey(), kind, childId);  
                     batchKeys.add(key);
-                } else if(batchState == 1) {
+                    
+                    this.nonFullBatches += 1;
+                } 
+                
+                else if(batchState == 1) {
                     this.fullBatches += 1;
                 }
             }
@@ -74,5 +80,9 @@ public class AvailableBatches {
 
     public int getFullBatchesCount(){
         return this.fullBatches;
+    }
+
+    public int getNonFullBatchesCount(){
+      return this.nonFullBatches;
     }
 }

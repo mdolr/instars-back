@@ -71,11 +71,10 @@ public class Timeline {
         for(Map.Entry<Key, Entity> entry : results.entrySet()){
             Entity post = entry.getValue();
 
-            /*AvailableBatches availableBatches= new AvailableBatches("PostLiker", post.getKey(), (String) post.getProperty("id"));
+            AvailableBatches availableBatches= new AvailableBatches(post, "PostLiker");
             // Count all available batches size + completed batches number * batch max size
-            int likesCount = availableBatches.getSizeCount()+(new Integer(post.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE);
-            post.setProperty("likes", likesCount);*/
-            int likesCount = 0;
+            int likesCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE);
+            post.setProperty("likes", likesCount);
 
             Boolean hasLiked = (Boolean) new ExistenceQuery().check("PostLiker", post.getKey(), reqUser.getId());
             post.setProperty("hasLiked", hasLiked);
