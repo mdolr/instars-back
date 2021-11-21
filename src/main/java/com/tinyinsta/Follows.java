@@ -44,7 +44,7 @@ public class Follows {
 
     Transaction txn = datastore.beginTransaction();
 
-    AvailableBatches availableBatches = new AvailableBatches("UserFollower", target.getKey(), (String) target.getProperty("id"));
+    AvailableBatches availableBatches = new AvailableBatches(target, "UserFollower");
     
     int followersCount;
 
@@ -65,7 +65,7 @@ public class Follows {
 
         // Count all available batches size + completed batches number * batch max size
         // -1 to remove self follower from count
-        followersCount = availableBatches.getSizeCount()+(new Integer(user.getProperty("fullBatches").toString())*Constants.MAX_BATCH_SIZE) - 1;
+        followersCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE) - 1;
 
         if(batch.size() >= Constants.MAX_BATCH_SIZE) {
             user.setProperty("fullBatches", new Integer(user.getProperty("fullBatches").toString()) + 1);

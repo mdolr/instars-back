@@ -19,7 +19,7 @@ import com.tinyinsta.dto.PostDTO;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Likes {
-    @ApiMethod(name = "likes.updateLikes", httpMethod = "post", path = "posts/{id}/likes",
+/*    @ApiMethod(name = "likes.updateLikes", httpMethod = "post", path = "posts/{id}/likes",
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
@@ -85,5 +85,5 @@ public class Likes {
         post.setProperty("hasLiked", true);
         
         return new PostDTO(post, null, likesCount);
-    }
+    }*/
 }

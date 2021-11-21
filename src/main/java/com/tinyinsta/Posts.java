@@ -28,7 +28,7 @@ import com.google.api.server.spi.response.NotFoundException;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Posts {
-
+/*
     @ApiMethod(name = "posts.getOne", httpMethod = "get", path = "posts/{id}")
     public PostDTO getOne(@Named("id") String postId) throws EntityNotFoundException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -87,15 +87,7 @@ public class Posts {
         String fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1);
         String uploadFileName = pictureId + "." + fileExtension;
 
-        Credentials credentials = null;
-
-        try {
-            credentials = GoogleCredentials.fromStream(new FileInputStream("src/cred.json"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        Storage storage = StorageOptions.newBuilder().setProjectId(projectId)/*.setCredentials(credentials)*/.build()
+        Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build()
                 .getService();
 
         // Define Resource
@@ -125,12 +117,7 @@ public class Posts {
             post.setProperty("fullBatches", 0);
             post.setProperty("published", false);
 
-            /*new PostReceivers().createEntity(user, post);
-
-            int nbBuckets = Constants.LIKES_MAX_BUCKETS_NUMBER;
-            for (int i = 1; i <= nbBuckets; i++) {
-                new PostLikers().createEntity(postKey);
-            }*/
+            
            
             datastore.put(post);
             txn.commit();
@@ -170,15 +157,9 @@ public class Posts {
 
         String objectName = (String) post.getProperty("pictureName");
 
-        Credentials credentials = null;
-
-        try {
-            credentials = GoogleCredentials.fromStream(new FileInputStream("src/cred.json"));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+       
         
-        Storage storage = StorageOptions.newBuilder().setProjectId(projectId)/*.setCredentials(credentials)*/.build()
+        Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build()
                 .getService();
 
         Bucket bucket = storage.get(bucketName);
@@ -196,8 +177,8 @@ public class Posts {
           new PostReceivers().createEntity(user, post);
           
           int nbBuckets = Constants.LIKES_MAX_BUCKETS_NUMBER;
-          for (int i = 1; i <= nbBuckets; i++) {
-              new PostLikers().createEntity(post.getKey());
+          for (int i = 0; i < nbBuckets; i++) {
+              new PostLikers().createEntity(post.getKey(), i, (String) post.getProperty("id"));
           }
           
           post.setProperty("published", true);
@@ -211,5 +192,5 @@ public class Posts {
                 txn.rollback();
             }
         }
-    }
+    }*/
 }

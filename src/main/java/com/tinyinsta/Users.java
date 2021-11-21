@@ -81,14 +81,22 @@ public class Users {
             newUser.setProperty("pictureURL", payload.getString("picture")); 
             newUser.setProperty("createdAt", new Date());
             newUser.setProperty("updatedAt", new Date());
-            newUser.setProperty("fullBatches", 0);
+
+            ArrayList<Integer> batchIndex = new ArrayList<Integer>();
 
             // Create the UserFollowers entity
 
             // A for loop that loops 3 times
-            for (int i = 0; i < 3; i++) {
+            for (int i = 0; i < 5; i++) {
+                // Key  
+                String userFollowersId = String.valueOf(i) + "-" + reqUser.getId().toString();
+                Key key = KeyFactory.createKey(newUser.getKey(),"UserFollower", userFollowersId);
+
                 // Create the UserFollowers entity
-                Entity userFollowers = new Entity("UserFollower", newUser.getKey());
+                Entity userFollowers = new Entity(key);
+                userFollowers.setProperty("id", userFollowersId);
+
+                batchIndex.add(0);
 
                 // The user's first follower is itself so it can see its own posts in its timeline
                 if(i == 0) {
@@ -109,6 +117,8 @@ public class Users {
                 datastore.put(userFollowers);
             }
 
+            newUser.setProperty("batchIndex", batchIndex);
+
             // Put the entities in the datastore
             datastore.put(newUser);
 
@@ -116,7 +126,7 @@ public class Users {
         }
     }
 
-    @ApiMethod(name = "users.getRandom", httpMethod = "get", path = "users/explore",
+    /*@ApiMethod(name = "users.getRandom", httpMethod = "get", path = "users/explore",
                clientIds = { Constants.WEB_CLIENT_ID },
                audiences = { Constants.WEB_CLIENT_ID },
                scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
@@ -181,7 +191,7 @@ public class Users {
 
         // Return the list
         return users;
-    }
+    }*/
 
 
 

@@ -19,7 +19,6 @@ public class PostReceivers {
         for(Entity follower : followers) {
             Entity receivers = new Entity("PostReceiver", post.getKey());
             if(follower.getProperty("batch") != null) {
-
                 receivers.setProperty("createdAt", post.getProperty("createdAt"));
                 receivers.setProperty("batch", follower.getProperty("batch"));
                 receivers.setProperty("parentId", post.getProperty("postId"));
