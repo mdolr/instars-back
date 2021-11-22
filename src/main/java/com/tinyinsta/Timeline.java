@@ -55,7 +55,7 @@ public class Timeline {
             CompositeFilter filter = null;
 
             Query firstPostReceiver = new Query("PostReceiver")
-                .setFilter(new FilterPredicate("parentId", Query.FilterOperator.GREATER_THAN_OR_EQUAL, after == null ? String.valueOf(i) : String.valueOf(i) + "-" + after))
+                .setFilter(new FilterPredicate("parentId", Query.FilterOperator.GREATER_THAN_OR_EQUAL, String.valueOf(i)))
                 .setKeysOnly();
 
             PreparedQuery firstPostReceiverPq = datastore.prepare(firstPostReceiver);
@@ -67,9 +67,9 @@ public class Timeline {
                 bottomLimitFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, Query.FilterOperator.GREATER_THAN, bottomKeyLimit);            
             }
 
-            if(i != Constants.TIMELINE_BUCKETS - 1) {
+            if(i != Constants.TIMELINE_BUCKETS - 1 || after != null) {
                 Query lastPostReceiver = new Query("PostReceiver")
-                    .setFilter(new FilterPredicate("parentId", Query.FilterOperator.GREATER_THAN, String.valueOf(i + 1)))
+                    .setFilter(new FilterPredicate("parentId", Query.FilterOperator.GREATER_THAN, after == null ? String.valueOf(i + 1) : String.valueOf(i) + "-" + after))
                     .setKeysOnly();
 
                 PreparedQuery lastPostReceiverPq = datastore.prepare(lastPostReceiver);
