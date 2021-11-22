@@ -80,7 +80,7 @@ public class Timeline {
                 if(lastPostReceiverEntities.size() > 0) {
                     upperKeyLimit = lastPostReceiverEntities.get(0).getKey();
                     // System.out.println("UpperKey for i = " + i + " is " + upperKeyLimit);
-                    upperLimitFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, Query.FilterOperator.LESS_THAN, upperKeyLimit);            
+                    upperLimitFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, Query.FilterOperator.LESS_THAN_OR_EQUAL, upperKeyLimit);            
                 }
             }
 
