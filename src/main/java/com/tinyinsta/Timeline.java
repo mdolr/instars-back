@@ -34,6 +34,8 @@ public class Timeline {
             throw new UnauthorizedException("Authorization required");
         }
 
+        System.out.println("\n\n--- New req ---");
+
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         // Verify that the user exists
@@ -64,7 +66,7 @@ public class Timeline {
             if(firstPostReceiverEntities.size() > 0) {
                 bottomKeyLimit = firstPostReceiverEntities.get(0).getKey();
                 System.out.println("BottomKey for i =" + i + " is " + bottomKeyLimit);
-                bottomLimitFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, Query.FilterOperator.GREATER_THAN, bottomKeyLimit);            
+                bottomLimitFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, Query.FilterOperator.GREATER_THAN_OR_EQUAL, bottomKeyLimit);            
             }
 
             if(i != Constants.TIMELINE_BUCKETS - 1 || after != null) {
@@ -77,7 +79,7 @@ public class Timeline {
               
                 if(lastPostReceiverEntities.size() > 0) {
                     upperKeyLimit = lastPostReceiverEntities.get(0).getKey();
-                    System.out.println("UpperKey for i =" + i + " is " + upperKeyLimit);
+                    System.out.println("UpperKey for i = " + i + " is " + upperKeyLimit);
                     upperLimitFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, Query.FilterOperator.LESS_THAN, upperKeyLimit);            
                 }
             }
@@ -105,9 +107,14 @@ public class Timeline {
 
             QueryResultList<Entity> postReceivers = datastore.prepare(query).asQueryResultList(fetchOptions);
             
+            System.out.println("Found " + postReceivers.size() + " postReceivers for i = " + i );
+
             for(Entity postReceiver : postReceivers){
+                System.out.println("Adding " + postReceiver.getKey() + " to postKeys");
                 postKeys.add(postReceiver.getParent());
             }
+
+            System.out.println("\n");
         }
 
         if(postKeys.size() > 0) {
