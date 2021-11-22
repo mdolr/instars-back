@@ -34,7 +34,7 @@ public class Timeline {
             throw new UnauthorizedException("Authorization required");
         }
 
-        System.out.println("\n\n--- New req ---");
+        //System.out.println("\n\n--- New req ---");
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
@@ -57,7 +57,7 @@ public class Timeline {
             CompositeFilter filter = null;
 
             Query firstPostReceiver = new Query("PostReceiver")
-                .setFilter(new FilterPredicate("parentId", Query.FilterOperator.GREATER_THAN_OR_EQUAL, String.valueOf(i)))
+                .setFilter(new FilterPredicate("parentId", Query.FilterOperator.GREATER_THAN_OR_EQUAL, after == null ? String.valueOf(i) : String.valueOf(i) + "-" + after))
                 .setKeysOnly();
 
             PreparedQuery firstPostReceiverPq = datastore.prepare(firstPostReceiver);
@@ -65,13 +65,13 @@ public class Timeline {
             
             if(firstPostReceiverEntities.size() > 0) {
                 bottomKeyLimit = firstPostReceiverEntities.get(0).getKey();
-                System.out.println("BottomKey for i =" + i + " is " + bottomKeyLimit);
+                // System.out.println("BottomKey for i =" + i + " is " + bottomKeyLimit);
                 bottomLimitFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, Query.FilterOperator.GREATER_THAN_OR_EQUAL, bottomKeyLimit);            
             }
 
-            if(i != Constants.TIMELINE_BUCKETS - 1 || after != null) {
+            if(i != Constants.TIMELINE_BUCKETS - 1) {
                 Query lastPostReceiver = new Query("PostReceiver")
-                    .setFilter(new FilterPredicate("parentId", Query.FilterOperator.GREATER_THAN, after == null ? String.valueOf(i + 1) : String.valueOf(i) + "-" + after))
+                    .setFilter(new FilterPredicate("parentId", Query.FilterOperator.GREATER_THAN, String.valueOf(i + 1)))
                     .setKeysOnly();
 
                 PreparedQuery lastPostReceiverPq = datastore.prepare(lastPostReceiver);
@@ -79,7 +79,7 @@ public class Timeline {
               
                 if(lastPostReceiverEntities.size() > 0) {
                     upperKeyLimit = lastPostReceiverEntities.get(0).getKey();
-                    System.out.println("UpperKey for i = " + i + " is " + upperKeyLimit);
+                    // System.out.println("UpperKey for i = " + i + " is " + upperKeyLimit);
                     upperLimitFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, Query.FilterOperator.LESS_THAN, upperKeyLimit);            
                 }
             }
@@ -103,18 +103,19 @@ public class Timeline {
 
             Query query = new Query("PostReceiver")
                 .setFilter(filter != null ? filter : belongsFilter)
+                //.addSort(Entity.KEY_RESERVED_PROPERTY, SortDirection.DESCENDING)
                 .setKeysOnly();
 
             QueryResultList<Entity> postReceivers = datastore.prepare(query).asQueryResultList(fetchOptions);
             
-            System.out.println("Found " + postReceivers.size() + " postReceivers for i = " + i );
+            //System.out.println("Found " + postReceivers.size() + " postReceivers for i = " + i );
 
             for(Entity postReceiver : postReceivers){
-                System.out.println("Adding " + postReceiver.getKey() + " to postKeys");
+                //System.out.println("Adding " + postReceiver.getKey() + " to postKeys");
                 postKeys.add(postReceiver.getParent());
             }
 
-            System.out.println("\n");
+            //System.out.println("\n");
         }
 
         if(postKeys.size() > 0) {
@@ -122,7 +123,7 @@ public class Timeline {
           // because we will drop the rest
           Collections.sort(postKeys, new Comparator<Key>() {
             public int compare(Key a, Key b) {
-              return b.getName().split("-")[1].compareTo(a.getName().split("-")[1]);
+              return a.getName().split("-")[1].compareTo(b.getName().split("-")[1]);
             }
           });
        
@@ -160,8 +161,8 @@ public class Timeline {
               return b.createdAt.compareTo(a.createdAt);
             }});
           
-        String previousCursor = posts.size() > 0 ? String.valueOf(posts.get(0).createdAt.getTime()) : null;
-        String nextCursor = posts.size() > 0 ? String.valueOf(posts.get(posts.size() - 1).createdAt.getTime()) : null;
+        String previousCursor = posts.size() > 0 ? String.valueOf(posts.get(0).id.split("-")[1]) : null;
+        String nextCursor = posts.size() > 0 ? String.valueOf(posts.get(posts.size() - 1).id.split("-")[1]) : null;
 
         return new PaginationDTO(posts, previousCursor, nextCursor);
     }

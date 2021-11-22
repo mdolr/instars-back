@@ -81,7 +81,9 @@ public class Posts {
 
         int randomBucket = new RandomGenerator().get(0, Constants.TIMELINE_BUCKETS - 1);
 
-        String postId = String.valueOf(randomBucket) + String.valueOf(-1 * new Date().getTime()); //UUID.randomUUID().toString();
+        long maxLong = Long.MAX_VALUE;
+
+        String postId = String.valueOf(randomBucket) + "-" + String.valueOf(maxLong - new Date().getTime()); //UUID.randomUUID().toString();
         String pictureId = UUID.randomUUID().toString();
 
         String fileName = (String) reqBody.get("fileName");
