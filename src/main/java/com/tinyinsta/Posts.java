@@ -87,8 +87,9 @@ public class Posts {
         String pictureId = UUID.randomUUID().toString();
 
         String fileName = (String) reqBody.get("fileName");
+        String fileType = (String) reqBody.get("fileType");
         
-        String fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1);
+        String fileExtension = fileType.substring(fileType.lastIndexOf("/") + 1); //fileName.substring(fileName.lastIndexOf('.') + 1);
         String uploadFileName = pictureId + "." + fileExtension;
 
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build()

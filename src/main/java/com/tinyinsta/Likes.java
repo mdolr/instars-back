@@ -86,6 +86,7 @@ public class Likes {
                 txn.rollback();
             }
         }
+        
         int newBucketsCount = Constants.LIKES_MAX_BUCKETS_NUMBER - availableBatches.getNonFullBatchesCount();
         
         if(newBucketsCount > 0) {
@@ -95,6 +96,9 @@ public class Likes {
               new PostLikers().createEntity(post, batchIndex.size());
               batchIndex.add(0);
           }
+
+          user.setProperty("batchIndex", batchIndex);
+          datastore.put(user);
         }
 
         post.setProperty("hasLiked", true);

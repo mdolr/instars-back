@@ -6,7 +6,7 @@ package com.tinyinsta.common;
 public class Constants {
   public static final String WEB_CLIENT_ID = "284772421623-8klntslq83finkqcgee2d3bi08rj7kt0.apps.googleusercontent.com";
   public static final int LIKES_MAX_BUCKETS_NUMBER = 5;
-  public static final int MAX_BATCH_SIZE = 39_000;
+  public static final int MAX_BATCH_SIZE = 2; //39_000;
   public static final int PAGINATION_SIZE = 5;
   public static final int TIMELINE_BUCKETS = 5; // from 0 to 4 so 5 buckets
 

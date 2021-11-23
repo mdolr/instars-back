@@ -38,9 +38,9 @@ public class Follows {
     Entity target = datastore.get(KeyFactory.createKey("User", targetId));
 
     //Check if user is already following
-    if(new ExistenceQuery().check("UserFollower", target.getKey(), reqUser.getId())){
+    /*if(new ExistenceQuery().check("UserFollower", target.getKey(), reqUser.getId())){
         throw new ConflictException("You are already following this user");
-    }
+    }*/
 
     Transaction txn = datastore.beginTransaction();
 
@@ -91,6 +91,31 @@ public class Follows {
         if (txn.isActive()) {
             txn.rollback();
         }
+    }
+
+    int newBucketsCount = Constants.LIKES_MAX_BUCKETS_NUMBER - availableBatches.getNonFullBatchesCount();
+        
+    if(newBucketsCount > 0) {
+      ArrayList<Integer> batchIndex = (ArrayList<Integer>) user.getProperty("batchIndex");
+
+      for (int i = 0; i < newBucketsCount; i++) {
+          String userFollowersId = String.valueOf(batchIndex.size()) + "-" + reqUser.getId().toString();
+          Key key = KeyFactory.createKey(user.getKey(), "UserFollower", userFollowersId);
+
+          // Create the UserFollowers entity
+          Entity userFollowers = new Entity(key);
+          userFollowers.setProperty("id", userFollowersId);
+          userFollowers.setProperty("batch", null);
+          userFollowers.setProperty("size", 0);
+          userFollowers.setProperty("parentId", reqUser.getId());
+          userFollowers.setProperty("updatedAt", new Date());
+
+          datastore.put(userFollowers);
+          batchIndex.add(0);
+      }
+
+      user.setProperty("batchIndex", batchIndex);
+      datastore.put(user);
     }
 
     target.setProperty("hasFollowed", true);
