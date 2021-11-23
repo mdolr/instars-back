@@ -34,7 +34,7 @@ public class Timeline {
             throw new UnauthorizedException("Authorization required");
         }
 
-        //System.out.println("\n\n--- New req ---");
+        System.out.println("\n\n--- New req ---");
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
@@ -65,7 +65,7 @@ public class Timeline {
             
             if(firstPostReceiverEntities.size() > 0) {
                 bottomKeyLimit = firstPostReceiverEntities.get(0).getKey();
-                // System.out.println("BottomKey for i =" + i + " is " + bottomKeyLimit);
+                System.out.println("BottomKey for i =" + i + " is " + bottomKeyLimit);
                 bottomLimitFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, Query.FilterOperator.GREATER_THAN_OR_EQUAL, bottomKeyLimit);            
             }
 
@@ -79,7 +79,7 @@ public class Timeline {
               
                 if(lastPostReceiverEntities.size() > 0) {
                     upperKeyLimit = lastPostReceiverEntities.get(0).getKey();
-                    // System.out.println("UpperKey for i = " + i + " is " + upperKeyLimit);
+                    System.out.println("UpperKey for i = " + i + " is " + upperKeyLimit);
                     upperLimitFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, Query.FilterOperator.LESS_THAN, upperKeyLimit);            
                 }
             }
@@ -101,21 +101,23 @@ public class Timeline {
                 filter = null;
             }
 
-            Query query = new Query("PostReceiver")
-                .setFilter(filter != null ? filter : belongsFilter)
-                //.addSort(Entity.KEY_RESERVED_PROPERTY, SortDirection.DESCENDING)
-                .setKeysOnly();
+            if(filter != null) {
+                Query query = new Query("PostReceiver")
+                    .setFilter(filter != null ? filter : belongsFilter)
+                    //.addSort(Entity.KEY_RESERVED_PROPERTY, SortDirection.DESCENDING)
+                    .setKeysOnly();
 
-            QueryResultList<Entity> postReceivers = datastore.prepare(query).asQueryResultList(fetchOptions);
-            
-            //System.out.println("Found " + postReceivers.size() + " postReceivers for i = " + i );
+                QueryResultList<Entity> postReceivers = datastore.prepare(query).asQueryResultList(fetchOptions);
+                
+                System.out.println("Found " + postReceivers.size() + " postReceivers for i = " + i );
 
-            for(Entity postReceiver : postReceivers){
-                //System.out.println("Adding " + postReceiver.getKey() + " to postKeys");
-                postKeys.add(postReceiver.getParent());
+                for(Entity postReceiver : postReceivers){
+                    System.out.println("Adding " + postReceiver.getKey() + " to postKeys");
+                    postKeys.add(postReceiver.getParent());
+                }
+
+                System.out.println("\n");
             }
-
-            //System.out.println("\n");
         }
 
         if(postKeys.size() > 0) {
