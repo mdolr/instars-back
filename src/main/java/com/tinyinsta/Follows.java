@@ -38,9 +38,9 @@ public class Follows {
     Entity target = datastore.get(KeyFactory.createKey("User", targetId));
 
     //Check if user is already following
-    /*if(new ExistenceQuery().check("UserFollower", target.getKey(), reqUser.getId())){
+    if(new ExistenceQuery().check("UserFollower", target.getKey(), reqUser.getId())){
         throw new ConflictException("You are already following this user");
-    }*/
+    }
 
     Transaction txn = datastore.beginTransaction();
 

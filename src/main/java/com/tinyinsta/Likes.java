@@ -71,12 +71,12 @@ public class Likes {
 
             // Update the batch index when a batch is completely filled
             if(batch.size() >= Constants.MAX_BATCH_SIZE) {
-              ArrayList<Integer> batchIndex = (ArrayList<Integer>) user.getProperty("batchIndex");
+              ArrayList<Integer> batchIndex = (ArrayList<Integer>) post.getProperty("batchIndex");
               batchIndex.set(batchNumber, 1);
 
-              user.setProperty("batchIndex", batchIndex);
-              datastore.put(user);
-          }
+              post.setProperty("batchIndex", batchIndex);  
+              datastore.put(post);           
+            }
 
             datastore.put(availableBatch);
 
@@ -84,21 +84,23 @@ public class Likes {
         } finally {
             if (txn.isActive()) {
                 txn.rollback();
+            } else {
+              //datastore.put(user);
             }
         }
         
         int newBucketsCount = Constants.LIKES_MAX_BUCKETS_NUMBER - availableBatches.getNonFullBatchesCount();
         
         if(newBucketsCount > 0) {
-          ArrayList<Integer> batchIndex = (ArrayList<Integer>) user.getProperty("batchIndex");
+          ArrayList<Integer> batchIndex = (ArrayList<Integer>) post.getProperty("batchIndex");
 
           for (int i = 0; i < newBucketsCount; i++) {
               new PostLikers().createEntity(post, batchIndex.size());
               batchIndex.add(0);
           }
 
-          user.setProperty("batchIndex", batchIndex);
-          datastore.put(user);
+          post.setProperty("batchIndex", batchIndex);
+          datastore.put(post);
         }
 
         post.setProperty("hasLiked", true);
