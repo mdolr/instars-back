@@ -196,9 +196,10 @@ public class Posts {
         } finally {
             if (txn.isActive()) {
                 txn.rollback();
-            } else {
+            } /*else {
                 datastore.put(user);
             }
+            */
         }
     }
 }
