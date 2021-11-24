@@ -87,10 +87,7 @@ public class Follows {
             batchIndex.set(batchNumber, 1);
 
             user.setProperty("batchIndex", batchIndex);
-            datastore.put(user);
         }
-
-        // TODO: Create new UserFollower if all filled ???
 
         // Then put the batch back in the datastore
         datastore.put(availableBatch);
@@ -98,6 +95,8 @@ public class Follows {
     } finally {
         if (txn.isActive()) {
             txn.rollback();
+        } else {
+            datastore.put(user);
         }
     }
 

@@ -132,11 +132,10 @@ public class Users {
                audiences = { Constants.WEB_CLIENT_ID },
                scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
     public List<UserDTO> getRandom(User reqUser) throws UnauthorizedException, EntityNotFoundException, ConflictException {
-        if(reqUser == null) {
+
+      if(reqUser == null) {
             throw new UnauthorizedException("Authorization required");
         }
-
-        
 
         // Query the datastore to get the users
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
