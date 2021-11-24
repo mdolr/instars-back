@@ -29,24 +29,12 @@ import com.google.api.server.spi.response.NotFoundException;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Posts {
-    @ApiMethod(name = "posts.getOne", httpMethod = "get", path = "posts/{id}")
-    public PostDTO getOne(@Named("id") String postId) throws EntityNotFoundException {
-        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-
-        Entity post = datastore.get(KeyFactory.createKey("Post", postId));
-
-        return new PostDTO(post, null, 0); //TODO: Add like number and full retrieval of post
-    }
-
-    @ApiMethod(name = "posts.getAll", httpMethod = "get", path = "posts")
-    public ArrayList<PostDTO> getAll(@Nullable @Named("userId") String userId) {
+    @ApiMethod(name = "posts.getAll", httpMethod = "get", path = "posts/{authorId}")
+    public ArrayList<PostDTO> getAll(@Named("authorId") String authorId) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         Query q = new Query("Post").addSort("createdAt", Query.SortDirection.DESCENDING);
-
-        if (userId != null) {
-            q.setFilter(new Query.FilterPredicate("userId", Query.FilterOperator.EQUAL, userId));
-        }
+        q.setFilter(new Query.FilterPredicate("authorId", Query.FilterOperator.EQUAL, authorId));
 
         PreparedQuery pq = datastore.prepare(q);
         List<Entity> results = pq.asList(FetchOptions.Builder.withDefaults());
