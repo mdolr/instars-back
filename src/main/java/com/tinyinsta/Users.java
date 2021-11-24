@@ -285,7 +285,7 @@ public class Users {
         clientIds = { Constants.WEB_CLIENT_ID },
         audiences = { Constants.WEB_CLIENT_ID },
         scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-    public UserDTO getSelf(User reqUser, HttpServletRequest request, Map<String, Object> reqBody) throws UnauthorizedException, EntityNotFoundException {
+    public UserDTO createFakeUser(User reqUser, HttpServletRequest request, Map<String, Object> reqBody) throws UnauthorizedException, EntityNotFoundException {
 
         // Query the datastore to get the user by its ID
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
