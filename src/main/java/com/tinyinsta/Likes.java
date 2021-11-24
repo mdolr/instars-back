@@ -23,20 +23,28 @@ public class Likes {
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-    public PostDTO updateLikes(User reqUser, @Named("id") String postId) throws EntityNotFoundException, UnauthorizedException, ConflictException {
-
+    public PostDTO updateLikes(User reqUser, @Named("id") String postId, @Named("fakeUser") String fakeUserId) throws EntityNotFoundException, UnauthorizedException, ConflictException {
+        
+        String userId;
+        
         if(reqUser == null) {
-            throw new UnauthorizedException("Authorization required");
+            if(fakeUserId == null) {
+                throw new UnauthorizedException("Authorization required");
+            } else {
+                userId = fakeUserId;
+            }
+        } else {
+          userId = reqUser.getId();
         }
 
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         //Verify user existence
-        Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
+        Entity user = datastore.get(KeyFactory.createKey("User", userId));
 
         Entity post = datastore.get(KeyFactory.createKey("Post", postId));
 
-        if(new ExistenceQuery().check("PostLiker", post.getKey(), reqUser.getId())){
+        if(new ExistenceQuery().check("PostLiker", post.getKey(), userId)){
             throw new ConflictException("You've already liked this post");
         }
 
@@ -59,7 +67,7 @@ public class Likes {
             }
             
             // Append the user to the batch
-            batch.add(reqUser.getId());
+            batch.add(userId);
 
             // Update the batch
             availableBatch.setProperty("batch", batch);
