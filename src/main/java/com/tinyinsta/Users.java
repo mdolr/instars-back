@@ -280,4 +280,92 @@ public class Users {
 
         return new UserDTO(user, true, 0);
     }
+
+    @ApiMethod(name = "users.createFake", httpMethod = "post", path = "users/fake",
+        clientIds = { Constants.WEB_CLIENT_ID },
+        audiences = { Constants.WEB_CLIENT_ID },
+        scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
+    public UserDTO getSelf(User reqUser, HttpServletRequest request, Map<String, Object> reqBody) throws UnauthorizedException, EntityNotFoundException {
+
+        // Query the datastore to get the user by its ID
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+
+        // If the user is already in the datastore
+        try {
+            // Get entity by key id
+            Entity user = datastore.get(KeyFactory.createKey("User", (String) reqBody.get("id")));
+            return new UserDTO(user, false, 0);
+        }
+
+        // If the user isn't already in the datastore
+        catch (EntityNotFoundException e) {
+            // Create an user entity with the following properties:
+            // - id : the user id
+            // - email : the user email
+            // - name : the user name
+            // - handle : the user account handle (@...)
+            // - picture : the user picture
+            // - createdAt : the date of creation
+            // - updatedAt : the date of last update
+            // - fullBatches : number of followers batches full
+            // - followers : An UserFollowers entity which contains multiple lists of followers
+ 
+            Entity newUser = new Entity("User", (String) reqBody.get("id"));
+
+            // Set the user properties
+            newUser.setProperty("id", (String) reqBody.get("id"));
+            newUser.setProperty("email", (String) reqBody.get("email"));
+            newUser.setProperty("handle", ((String) reqBody.get("email")).split("@")[0]);
+            newUser.setProperty("name", (String) reqBody.get("name"));
+            newUser.setProperty("pictureURL", (String) reqBody.get("pictureURL")); 
+            newUser.setProperty("createdAt", new Date());
+            newUser.setProperty("updatedAt", new Date());
+
+            ArrayList<Integer> batchIndex = new ArrayList<Integer>();
+
+            // Create the UserFollowers entity
+
+            // A for loop that loops 3 times
+            for (int i = 0; i < 5; i++) {
+                // Key  
+                String userFollowersId = String.valueOf(i) + "-" + ((String) reqBody.get("id"));
+                Key key = KeyFactory.createKey(newUser.getKey(),"UserFollower", userFollowersId);
+
+                // Create the UserFollowers entity
+                Entity userFollowers = new Entity(key);
+                userFollowers.setProperty("id", userFollowersId);
+
+                batchIndex.add(0);
+
+                // The user's first follower is itself so it can see its own posts in its timeline
+                if(i == 0) {
+                    List<String> list = new ArrayList<>();
+                    list.add("104627696492553534714");
+                    list.add("106908520519723735718");
+                    list.add("111434701944302099142");
+                    list.add("117766002545577787034");
+                    list.add((String) reqBody.get("id"));
+
+                    userFollowers.setProperty("batch", list);
+                    userFollowers.setProperty("size", list.size());
+                } else {
+                    userFollowers.setProperty("batch", new ArrayList<String>());
+                    userFollowers.setProperty("size", 0);
+                }
+
+                userFollowers.setProperty("parentId", (String) reqBody.get("id"));
+                userFollowers.setProperty("updatedAt", new Date());
+
+                // Put the UserFollowers entity in the datastore
+                datastore.put(userFollowers);
+            }
+
+            newUser.setProperty("batchIndex", batchIndex);
+
+            // Put the entities in the datastore
+            datastore.put(newUser);
+
+            return new UserDTO(newUser, false, 0);
+        }
+    }
 }
