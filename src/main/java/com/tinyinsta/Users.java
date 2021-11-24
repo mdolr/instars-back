@@ -12,8 +12,9 @@ import com.tinyinsta.common.Constants;
 import com.tinyinsta.common.ExistenceQuery;
 
 import javax.servlet.http.HttpServletRequest;
-
 import javax.inject.Named;
+
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -135,11 +136,40 @@ public class Users {
             throw new UnauthorizedException("Authorization required");
         }
 
-        // Get a random date between 1 january 1970 and now
-        Date randomDate = new Date((long) (Math.random() * (new Date().getTime() - new Date(0).getTime())));
+        
 
         // Query the datastore to get the users
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        
+        // Get the first User's created date
+        Query firstUserQuery = new Query("User")
+            .addSort("createdAt", Query.SortDirection.ASCENDING);
+
+        // Get the last User's created date
+        Query lastUserQuery = new Query("User")
+            .addSort("createdAt", Query.SortDirection.DESCENDING);
+
+        // Get the results
+        PreparedQuery preparedFirstUser = datastore.prepare(firstUserQuery);
+        PreparedQuery preparedLastUser = datastore.prepare(lastUserQuery);
+
+        // Get the results
+        List<Entity> first = preparedFirstUser.asList(FetchOptions.Builder.withLimit(1));
+        List<Entity> last = preparedLastUser.asList(FetchOptions.Builder.withLimit(1));
+
+        Long timestamp =  1635760373519L;
+        Date firstDate = new Date(timestamp);
+        Date lastDate = new Date();
+
+        if (first.size()>0) {
+            firstDate = (Date) first.get(0).getProperty("createdAt");
+        }
+        if (last.size()>0){
+            lastDate = (Date) last.get(0).getProperty("createdAt");
+        }
+
+        // Get a random date between oldest User's created date and newest user's created date.
+        Date randomDate = new Date((long) (Math.random() * (lastDate.getTime() - firstDate.getTime())));
 
         // Verify that the user exists
         Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
