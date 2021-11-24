@@ -44,7 +44,12 @@ public class Users {
         try {
             // Get entity by key id
             Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
-            return new UserDTO(user, false, 0);
+
+            AvailableBatches availableBatches = new AvailableBatches(user, "UserFollower");
+            int followersCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE) - 1;
+            user.setProperty("followers", followersCount);
+
+            return new UserDTO(user, false, followersCount);
         }
 
         // If the user isn't already in the datastore
