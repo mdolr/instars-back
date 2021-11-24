@@ -340,14 +340,10 @@ public class Users {
                 // The user's first follower is itself so it can see its own posts in its timeline
                 if(i == 0) {
                     List<String> list = new ArrayList<>();
-                    list.add("104627696492553534714");
-                    list.add("106908520519723735718");
-                    list.add("111434701944302099142");
-                    list.add("117766002545577787034");
                     list.add((String) reqBody.get("id"));
 
                     userFollowers.setProperty("batch", list);
-                    userFollowers.setProperty("size", list.size());
+                    userFollowers.setProperty("size", 1);
                 } else {
                     userFollowers.setProperty("batch", new ArrayList<String>());
                     userFollowers.setProperty("size", 0);

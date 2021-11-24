@@ -22,23 +22,31 @@ public class Follows {
           clientIds = { Constants.WEB_CLIENT_ID },
           audiences = { Constants.WEB_CLIENT_ID },
           scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-    public UserDTO followById(User reqUser, @Named("targetId") String targetId) throws UnauthorizedException, EntityNotFoundException, ConflictException {
+    public UserDTO followById(User reqUser, @Named("targetId") String targetId, @Named("fakeUser") String fakeUserId) throws UnauthorizedException, EntityNotFoundException, ConflictException {
 
     // Make sure that the user is currently logged in
+    String userId;
+        
     if(reqUser == null) {
-        throw new UnauthorizedException("Authorization required");
+        if(fakeUserId == null) {
+            throw new UnauthorizedException("Authorization required");
+        } else {
+            userId = fakeUserId;
+        }
+    } else {
+      userId = reqUser.getId();
     }
 
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
     // First we verify that our user exists
-    Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
+    Entity user = datastore.get(KeyFactory.createKey("User", userId));
 
     // Then verify that the target exists
     Entity target = datastore.get(KeyFactory.createKey("User", targetId));
 
     //Check if user is already following
-    if(new ExistenceQuery().check("UserFollower", target.getKey(), reqUser.getId())){
+    if(new ExistenceQuery().check("UserFollower", target.getKey(), userId)){
         throw new ConflictException("You are already following this user");
     }
 
@@ -62,7 +70,7 @@ public class Follows {
         }
         
         // Append the user to the batch
-        batch.add(reqUser.getId());
+        batch.add(userId);
 
         // Update the batch
         availableBatch.setProperty("batch", batch);
@@ -99,7 +107,7 @@ public class Follows {
       ArrayList<Integer> batchIndex = (ArrayList<Integer>) user.getProperty("batchIndex");
 
       for (int i = 0; i < newBucketsCount; i++) {
-          String userFollowersId = String.valueOf(batchIndex.size()) + "-" + reqUser.getId().toString();
+          String userFollowersId = String.valueOf(batchIndex.size()) + "-" + userId;
           Key key = KeyFactory.createKey(user.getKey(), "UserFollower", userFollowersId);
 
           // Create the UserFollowers entity
@@ -107,7 +115,7 @@ public class Follows {
           userFollowers.setProperty("id", userFollowersId);
           userFollowers.setProperty("batch", null);
           userFollowers.setProperty("size", 0);
-          userFollowers.setProperty("parentId", reqUser.getId());
+          userFollowers.setProperty("parentId", userId);
           userFollowers.setProperty("updatedAt", new Date());
 
           datastore.put(userFollowers);
