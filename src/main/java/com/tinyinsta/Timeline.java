@@ -28,10 +28,14 @@ public class Timeline {
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
-    public PaginationDTO getTimeline(User reqUser, @Nullable @Named("after") String after) throws UnauthorizedException, EntityNotFoundException, ConflictException {
+    public PaginationDTO getTimeline(User reqUser, @Nullable @Named("after") String after, @Nullable @Named("limit") Integer limit) throws UnauthorizedException, EntityNotFoundException, ConflictException {
         // If the user is not logged in : throw an error or redirect to the login page
         if (reqUser == null) {
             throw new UnauthorizedException("Authorization required");
+        }
+
+        if(limit == null) {
+          limit = Constants.PAGINATION_SIZE;
         }
 
         //Sytem.out.println("\n\n--- New req ---");
@@ -43,7 +47,7 @@ public class Timeline {
         // if the loggedUser doesn't already exist in the databse !!!
         Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
 
-        FetchOptions fetchOptions = FetchOptions.Builder.withLimit(Constants.PAGINATION_SIZE);
+        FetchOptions fetchOptions = FetchOptions.Builder.withLimit(limit);
         List<Key> postKeys = new ArrayList<>();
 
         Filter belongsFilter = new FilterPredicate("batch", FilterOperator.EQUAL, reqUser.getId());
@@ -130,8 +134,8 @@ public class Timeline {
           });
        
           // Je vais encore en enfer mais menfou
-          if(postKeys.size() > Constants.PAGINATION_SIZE) {
-            postKeys = postKeys.subList(0, Constants.PAGINATION_SIZE);
+          if(postKeys.size() > limit) {
+            postKeys = postKeys.subList(0, limit);
           } else {
             postKeys = postKeys.subList(0, postKeys.size());
           }
