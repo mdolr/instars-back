@@ -48,9 +48,9 @@ public class Likes {
             throw new ConflictException("You've already liked this post");
         }
 
-        Transaction txn = datastore.beginTransaction();
+        //Transaction txn = datastore.beginTransaction();
 
-        AvailableBatches availableBatches= new AvailableBatches(post, "PostLiker");
+        AvailableBatches availableBatches = new AvailableBatches(post, "PostLiker");
 
         int likesCount;
 
@@ -82,19 +82,18 @@ public class Likes {
               ArrayList<Integer> batchIndex = (ArrayList<Integer>) post.getProperty("batchIndex");
               batchIndex.set(batchNumber, 1);
 
-              post.setProperty("batchIndex", batchIndex);  
-              datastore.put(post);           
+              post.setProperty("batchIndex", batchIndex);           
             }
 
             datastore.put(availableBatch);
 
-            txn.commit();
+            //txn.commit();
         } finally {
-            if (txn.isActive()) {
-                txn.rollback();
-            } else {
-              //datastore.put(user);
-            }
+            //if (txn.isActive()) {
+            //    txn.rollback();
+            //} else {
+                datastore.put(post);
+            //}
         }
         
         int newBucketsCount = Constants.LIKES_MAX_BUCKETS_NUMBER - availableBatches.getNonFullBatchesCount();

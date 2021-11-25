@@ -173,7 +173,7 @@ public class Posts {
             throw new NotFoundException("Media not found");
         }
 
-        Transaction txn = datastore.beginTransaction();
+        //Transaction txn = datastore.beginTransaction();
 
         try {
             new PostReceivers().createEntity(user, post);
@@ -183,24 +183,22 @@ public class Posts {
             ArrayList<Integer> batchIndex = new ArrayList<Integer>();
 
             for (int i = 0; i < nbBuckets; i++) {
-              new PostLikers().createEntity(post, batchIndex.size());
-              batchIndex.add(0);
+                new PostLikers().createEntity(post, batchIndex.size());
+                batchIndex.add(0);
             }
 
             post.setProperty("batchIndex", batchIndex);
             post.setProperty("published", true);
 
-            datastore.put(post);
-            txn.commit();
-
-            return new PostDTO(post, user, 0);
+            //txn.commit();
         } finally {
-            if (txn.isActive()) {
-                txn.rollback();
-            } /*else {
-                datastore.put(user);
-            }
-            */
+            //if (txn.isActive()) {
+                //txn.rollback();
+            //} else {
+                datastore.put(post);
+            //}
         }
+
+        return new PostDTO(post, user, 0);
     }
 }

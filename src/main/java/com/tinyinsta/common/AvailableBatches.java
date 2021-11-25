@@ -32,10 +32,16 @@ public class AvailableBatches {
 
                 if (batchState == 0) {
                     String childId = String.valueOf(i) + "-" + ((String) entity.getProperty("id"));
+
+                    Key key;  
                     
-                    Key key = KeyFactory.createKey(entity.getKey(), kind, childId);  
+                    if(this.kind == "UserFollower") {
+                      key = KeyFactory.createKey(entity.getKey(), kind, childId);  
+                    } else {
+                      key = KeyFactory.createKey(kind, childId);  
+                    }
+
                     batchKeys.add(key);
-                    
                     this.nonFullBatches += 1;
                 } 
                 
@@ -48,8 +54,6 @@ public class AvailableBatches {
             
             Map<Key,Entity> availableBatchesMap = datastore.get(iterableKeys);
             this.availableBatches = new ArrayList<Entity>(availableBatchesMap.values());
-            
-        
     }
 
     public Entity getOneRandom() {
