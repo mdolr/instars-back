@@ -88,9 +88,7 @@ public class Users {
             ArrayList<Integer> batchIndex = new ArrayList<Integer>();
 
             // Create the UserFollowers entity
-
-            // A for loop that loops 3 times
-            for (int i = 0; i < 5; i++) {
+            for (int i = 0; i < Constants.MAX_BUCKETS_NUMBER; i++) {
                 // Key  
                 String userFollowersId = String.valueOf(i) + "-" + reqUser.getId().toString();
                 Key key = KeyFactory.createKey(newUser.getKey(),"UserFollower", userFollowersId);
@@ -165,12 +163,11 @@ public class Users {
         if (first.size()>0) {
             firstDate = (Date) first.get(0).getProperty("createdAt");
         }
-        if (last.size()>0){
+        if (last.size()>0) {
             lastDate = (Date) last.get(0).getProperty("createdAt");
         }
-
         // Get a random date between oldest User's created date and newest user's created date.
-        Date randomDate = new Date((long) (Math.random() * (lastDate.getTime() - firstDate.getTime())));
+        Date randomDate = new Date((long) (Math.random() * (lastDate.getTime() - firstDate.getTime())) + firstDate.getTime());
 
         // Verify that the user exists
         Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
@@ -280,7 +277,7 @@ public class Users {
         int followersCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE) - 1;
         resultUser.setProperty("followers", followersCount);
 
-        Boolean hasFollowed = (Boolean) new ExistenceQuery().check("UserFollower", resultUser.getKey(), reqUser.getId());
+        Boolean hasFollowed = new ExistenceQuery().check("UserFollower", resultUser.getKey(), reqUser.getId());
         resultUser.setProperty("hasFollowed", hasFollowed);
 
         return new UserDTO(resultUser, true, followersCount);

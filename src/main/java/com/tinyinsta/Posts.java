@@ -178,7 +178,7 @@ public class Posts {
         try {
             new PostReceivers().createEntity(user, post);
             
-            int nbBuckets = Constants.LIKES_MAX_BUCKETS_NUMBER;
+            int nbBuckets = Constants.MAX_BUCKETS_NUMBER;
 
             ArrayList<Integer> batchIndex = new ArrayList<Integer>();
 
