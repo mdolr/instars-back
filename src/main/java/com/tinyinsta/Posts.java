@@ -3,37 +3,34 @@ package com.tinyinsta;
 import com.google.api.server.spi.auth.common.User;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
+import com.google.api.server.spi.response.ConflictException;
+import com.google.api.server.spi.response.NotFoundException;
 import com.google.api.server.spi.response.UnauthorizedException;
 import com.google.appengine.api.datastore.*;
-import com.google.auth.Credentials;
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.storage.*;
+import com.tinyinsta.common.AvailableBatches;
 import com.tinyinsta.common.Constants;
+import com.tinyinsta.common.ExistenceQuery;
+import com.tinyinsta.common.RandomGenerator;
+import com.tinyinsta.dto.PostDTO;
 import com.tinyinsta.entity.PostLikers;
 import com.tinyinsta.entity.PostReceivers;
-import com.tinyinsta.common.RandomGenerator;
 
-import javax.annotation.Nullable;
 import javax.inject.Named;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.net.URL;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-
-import com.tinyinsta.dto.PostDTO;
-import com.tinyinsta.dto.UrlDTO;
-
-import com.google.api.server.spi.response.NotFoundException;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Posts {
     @ApiMethod(name = "posts.getAll", httpMethod = "get", path = "posts/{authorId}")
-    public ArrayList<PostDTO> getAll(@Named("authorId") String authorId) {
+    public ArrayList<PostDTO> getAll(User reqUser, @Named("authorId") String authorId) throws EntityNotFoundException, ConflictException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-        Query q = new Query("Post").addSort("createdAt", Query.SortDirection.DESCENDING);
+        //Check if user exists
+        datastore.get(KeyFactory.createKey("User", reqUser.getId()));
+
+        Query q = new Query("Post");
         q.setFilter(new Query.FilterPredicate("authorId", Query.FilterOperator.EQUAL, authorId));
 
         PreparedQuery pq = datastore.prepare(q);
@@ -41,9 +38,25 @@ public class Posts {
 
         ArrayList<PostDTO> posts = new ArrayList<PostDTO>();
         
-        for(Entity post : results) {
-            posts.add(new PostDTO(post, null, 0)); //TODO: Add like number and full retrieval of post 
+        // Recover likes and user info
+        // Use posts.keySet() transform to array list and then sort the array list or smth
+        for(Entity post  : results){
+            AvailableBatches availableBatches= new AvailableBatches(post, "PostLiker");
+            // Count all available batches size + completed batches number * batch max size
+            int likesCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE);
+            post.setProperty("likes", likesCount);
+
+            Boolean hasLiked = new ExistenceQuery().check("PostLiker", post.getKey(), reqUser.getId());
+            post.setProperty("hasLiked", hasLiked);
+
+            Entity author = datastore.get(KeyFactory.createKey("User", post.getProperty("authorId").toString()));
+            posts.add(new PostDTO(post, author, likesCount));
         }
+
+        Collections.sort(posts, new Comparator<PostDTO>() {
+            public int compare(PostDTO a, PostDTO b) {
+                return b.createdAt.compareTo(a.createdAt);
+            }});
 
         return posts;
     }
