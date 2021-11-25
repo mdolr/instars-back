@@ -3,26 +3,23 @@ package com.tinyinsta;
 import com.google.api.server.spi.auth.common.User;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
+import com.google.api.server.spi.response.ConflictException;
 import com.google.api.server.spi.response.NotFoundException;
 import com.google.api.server.spi.response.UnauthorizedException;
-import com.google.api.server.spi.response.ConflictException;
 import com.google.appengine.api.datastore.*;
 import com.tinyinsta.common.AvailableBatches;
 import com.tinyinsta.common.Constants;
 import com.tinyinsta.common.ExistenceQuery;
+import com.tinyinsta.dto.UserDTO;
+import org.apache.commons.codec.binary.Base64;
+import org.json.JSONObject;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.inject.Named;
-
-import java.math.BigInteger;
+import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
-import com.tinyinsta.dto.UserDTO;
-import org.apache.commons.codec.binary.Base64;
-import org.json.*;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Users {
@@ -269,20 +266,24 @@ public class Users {
 
     // A route to get an user by its handle
     @ApiMethod(name = "users.getUserByHandle", httpMethod = "get", path = "users/handle/{handle}")
-    public UserDTO getUserByHandle(@Named("handle") String handle) throws NotFoundException, EntityNotFoundException {
+    public UserDTO getUserByHandle(User reqUser, @Named("handle") String handle) throws NotFoundException, ConflictException {
         // Query the datastore to get the user by its handle
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Query query = new Query("User").setFilter(new Query.FilterPredicate("handle", Query.FilterOperator.EQUAL, handle));
-        Entity user = datastore.prepare(query).asSingleEntity();
+        Entity resultUser = datastore.prepare(query).asSingleEntity();
 
-        if (user == null) {
+        if (resultUser == null) {
             throw new NotFoundException("User not found");
         }
 
-        // Remove sensitive data before returning the user (only in the response do not update the datastore)
-        user.removeProperty("email");
+        AvailableBatches availableBatches = new AvailableBatches(resultUser, "UserFollower");
+        int followersCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE) - 1;
+        resultUser.setProperty("followers", followersCount);
 
-        return new UserDTO(user, true, 0);
+        Boolean hasFollowed = (Boolean) new ExistenceQuery().check("UserFollower", resultUser.getKey(), reqUser.getId());
+        resultUser.setProperty("hasFollowed", hasFollowed);
+
+        return new UserDTO(resultUser, true, followersCount);
     }
 
     @ApiMethod(name = "users.createFake", httpMethod = "post", path = "users/fake",
