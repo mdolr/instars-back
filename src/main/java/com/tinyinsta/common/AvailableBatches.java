@@ -56,9 +56,8 @@ public class AvailableBatches {
         Entity availableBatch;
         ArrayList<String> batch = new ArrayList<>(); // In case we get an empty batch we need to declare it
 
-        int randomBatch = new RandomGenerator().get(0, batch.size());
-
         if(this.availableBatches.size() > 0) {
+            int randomBatch = new RandomGenerator().get(0, this.availableBatches.size() - 1);
             availableBatch = this.availableBatches.get(randomBatch);
         } else {
             availableBatch = new Entity(this.kind, this.ancestorKey);
