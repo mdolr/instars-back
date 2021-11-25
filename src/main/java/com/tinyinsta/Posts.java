@@ -3,7 +3,6 @@ package com.tinyinsta;
 import com.google.api.server.spi.auth.common.User;
 import com.google.api.server.spi.config.Api;
 import com.google.api.server.spi.config.ApiMethod;
-import com.google.api.server.spi.response.ConflictException;
 import com.google.api.server.spi.response.NotFoundException;
 import com.google.api.server.spi.response.UnauthorizedException;
 import com.google.appengine.api.datastore.*;
@@ -24,7 +23,7 @@ import java.util.concurrent.TimeUnit;
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Posts {
     @ApiMethod(name = "posts.getAll", httpMethod = "get", path = "posts/{authorId}")
-    public ArrayList<PostDTO> getAll(User reqUser, @Named("authorId") String authorId) throws EntityNotFoundException, ConflictException {
+    public ArrayList<PostDTO> getAll(User reqUser, @Named("authorId") String authorId) throws EntityNotFoundException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         //Check if user exists
@@ -84,13 +83,12 @@ public class Posts {
 
         long maxLong = Long.MAX_VALUE;
 
-        String postId = String.valueOf(randomBucket) + "-" + String.valueOf(maxLong - new Date().getTime()); //UUID.randomUUID().toString();
+        String postId = randomBucket + "-" + (maxLong - new Date().getTime());
         String pictureId = UUID.randomUUID().toString();
 
-        String fileName = (String) reqBody.get("fileName");
         String fileType = (String) reqBody.get("fileType");
         
-        String fileExtension = fileType.substring(fileType.lastIndexOf("/") + 1); //fileName.substring(fileName.lastIndexOf('.') + 1);
+        String fileExtension = fileType.substring(fileType.lastIndexOf("/") + 1);
         String uploadFileName = pictureId + "." + fileExtension;
 
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build()
@@ -102,7 +100,6 @@ public class Posts {
         // Generate Signed URL
         Map<String, String> extensionHeaders = new HashMap<>();
         extensionHeaders.put("Content-Type", (String) reqBody.get("fileType"));
-        //extensionHeaders.put("Access-Control-Allow-Origin", "*");
 
         URL url = storage.signUrl(blobInfo, 15, TimeUnit.MINUTES, Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
                 Storage.SignUrlOption.withExtHeaders(extensionHeaders), Storage.SignUrlOption.withV4Signature());
@@ -152,7 +149,7 @@ public class Posts {
         Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
         Entity post = datastore.get(KeyFactory.createKey("Post", postId));
 
-        if (!post.getProperty("authorId").toString().equals(reqUser.getId().toString())) {
+        if (!post.getProperty("authorId").toString().equals(reqUser.getId())) {
             throw new UnauthorizedException("Post author doesn't match user");
         }
 
@@ -164,6 +161,7 @@ public class Posts {
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build()
                 .getService();
 
+        //Check if bucket exists
         Bucket bucket = storage.get(bucketName);
         com.google.cloud.storage.Blob blob = storage.get(bucketName, objectName);
 
@@ -180,7 +178,7 @@ public class Posts {
             
             int nbBuckets = Constants.MAX_BUCKETS_NUMBER;
 
-            ArrayList<Integer> batchIndex = new ArrayList<Integer>();
+            ArrayList<Integer> batchIndex = new ArrayList<>();
 
             for (int i = 0; i < nbBuckets; i++) {
               new PostLikers().createEntity(post, batchIndex.size());
@@ -197,10 +195,7 @@ public class Posts {
         } finally {
             if (txn.isActive()) {
                 txn.rollback();
-            } /*else {
-                datastore.put(user);
             }
-            */
         }
     }
 }

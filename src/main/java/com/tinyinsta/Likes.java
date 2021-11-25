@@ -40,7 +40,7 @@ public class Likes {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         //Verify user existence
-        Entity user = datastore.get(KeyFactory.createKey("User", userId));
+        datastore.get(KeyFactory.createKey("User", userId));
 
         Entity post = datastore.get(KeyFactory.createKey("Post", postId));
 
@@ -92,8 +92,6 @@ public class Likes {
         } finally {
             if (txn.isActive()) {
                 txn.rollback();
-            } else {
-              //datastore.put(user);
             }
         }
         

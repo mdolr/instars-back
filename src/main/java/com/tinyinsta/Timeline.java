@@ -38,8 +38,6 @@ public class Timeline {
           limit = Constants.PAGINATION_SIZE;
         }
 
-        //Sytem.out.println("\n\n--- New req ---");
-
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         // Verify that the user exists
@@ -61,7 +59,7 @@ public class Timeline {
             CompositeFilter filter = null;
 
             Query firstPostReceiver = new Query("PostReceiver")
-                .setFilter(new FilterPredicate("parentId", Query.FilterOperator.GREATER_THAN_OR_EQUAL, after == null ? String.valueOf(i) : String.valueOf(i) + "-" + after))
+                .setFilter(new FilterPredicate("parentId", Query.FilterOperator.GREATER_THAN_OR_EQUAL, after == null ? String.valueOf(i) : i + "-" + after))
                 .setKeysOnly();
 
             PreparedQuery firstPostReceiverPq = datastore.prepare(firstPostReceiver);
@@ -69,7 +67,6 @@ public class Timeline {
             
             if(firstPostReceiverEntities.size() > 0) {
                 bottomKeyLimit = firstPostReceiverEntities.get(0).getKey();
-                //Sytem.out.println("BottomKey for i =" + i + " is " + bottomKeyLimit);
                 bottomLimitFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, Query.FilterOperator.GREATER_THAN_OR_EQUAL, bottomKeyLimit);            
             }
 
@@ -83,7 +80,6 @@ public class Timeline {
               
                 if(lastPostReceiverEntities.size() > 0) {
                     upperKeyLimit = lastPostReceiverEntities.get(0).getKey();
-                    //Sytem.out.println("UpperKey for i = " + i + " is " + upperKeyLimit);
                     upperLimitFilter = new FilterPredicate(Entity.KEY_RESERVED_PROPERTY, Query.FilterOperator.LESS_THAN, upperKeyLimit);            
                 }
             }
@@ -108,19 +104,14 @@ public class Timeline {
             if(filter != null) {
                 Query query = new Query("PostReceiver")
                     .setFilter(filter != null ? filter : belongsFilter)
-                    //.addSort(Entity.KEY_RESERVED_PROPERTY, SortDirection.DESCENDING)
                     .setKeysOnly();
 
                 QueryResultList<Entity> postReceivers = datastore.prepare(query).asQueryResultList(fetchOptions);
-                
-                //Sytem.out.println("Found " + postReceivers.size() + " postReceivers for i = " + i );
+
 
                 for(Entity postReceiver : postReceivers){
-                    //Sytem.out.println("Adding " + postReceiver.getKey() + " to postKeys");
                     postKeys.add(postReceiver.getParent());
                 }
-
-                //Sytem.out.println("\n");
             }
         }
 
@@ -155,7 +146,7 @@ public class Timeline {
             int likesCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE);
             post.setProperty("likes", likesCount);
 
-            Boolean hasLiked = (Boolean) new ExistenceQuery().check("PostLiker", post.getKey(), reqUser.getId());
+            Boolean hasLiked = new ExistenceQuery().check("PostLiker", post.getKey(), reqUser.getId());
             post.setProperty("hasLiked", hasLiked);
 
             Entity author = datastore.get(KeyFactory.createKey("User", post.getProperty("authorId").toString()));

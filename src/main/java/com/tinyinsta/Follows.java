@@ -105,7 +105,7 @@ public class Follows {
       ArrayList<Integer> batchIndex = (ArrayList<Integer>) target.getProperty("batchIndex");
 
       for (int i = 0; i < newBucketsCount; i++) {
-          String userFollowersId = String.valueOf(batchIndex.size()) + "-" + targetId;
+          String userFollowersId = batchIndex.size() + "-" + targetId;
           Key key = KeyFactory.createKey(target.getKey(), "UserFollower", userFollowersId);
 
           // Create the UserFollowers entity
