@@ -1,135 +1,188 @@
-# Hello World Google Cloud Endpoints Frameworks for App Engine
+# Instars
 
-This generated sample provides an example of a [migration][7] from the prior
-version of [Google Cloud Endpoints Frameworks][3] to new
-[Google Cloud Endpoints Frameworks for App Engine][8] using a
-**Discovery Document**. Additionally, this sample provides an example of using
-the new App Engine Maven and Gradle plugins for deploying your Google App Engine
-Standard applications.
+_A backend that scales for a social network faster than light_
 
-This sample contains comments of how to use the prior Endpoints Frameworks as
-well. For clarity, the prior Endpoints Frameworks and the new Endpoints
-Frameworks are denoted as Endpoints Frameworks v1.0 and Endpoints Frameworks
-v2.0, respectively.
+# Installation
 
-Google Cloud Endpoints Frameworks v2.0 provides new functionality which may
-require payment and uses an OpenAPI specification. The OpenAPI development
-process is explained [here][8] and a quickstart is provided [here][9].
+## Setup
 
-- [Google App Engine Standard][1]
+### Prerequisites
 
-- [Java][2]
+| Software                 | version     |
+| ------------------------ | ----------- |
+| Java                     | 11.0        |
+| Maven                    | 3.8         |
+| Google Cloud             | SDK 363.0.0 |
+| app-engine-java          | 1.9.91      |
+| app-engine-python        | 1.9.96      |
+| bq                       | 2.0.71      |
+| cloud-datastore-emulator | 2.1.0       |
+| core                     | 2021.10.29  |
+| gsutil                   | 5.4         |
 
-- [Google Cloud Endpoints Frameworks v2.0][8]
-- [Google Cloud Endpoints Frameworks v1.0][3]
+### Service account
 
-- [Google App Engine Maven plugin][14]
-- [Google App Engine Gradle plugin][15]
+Create a service account with the following permissions:
 
-- [Google Cloud Endpoints Frameworks Maven Plugin][10]
-- [Google Cloud Endpoints Frameworks Gradle Plugin][11]
+- Service Account Token Creator
+- App Engine Admin
+- Storage Admin
+- Storage Object Admin
+- Storage Object Creator
+- Storage Object Viewer
+- Storage Transfer Viewer
 
-1. [Optional]: User Authenticating with Google Accounts in Web Clients
+Once the account has been created, create a keypair and download it as a JSON file placed at the root of this folder
 
-    1. Update the `WEB_CLIENT_ID` in [Constants.java](src/main/java/com/tinyinsta/Constants.java)
-      to reflect the web client ID you have registered in the
-      [Credentials on Developers Console for OAuth 2.0 client IDs][6].
+### OAuth2
 
-    1. Update the value of `google.devrel.samples.helloendpoints.CLIENT_ID` in
-       [base.js](src/main/webapp/js/base.js) to reflect the web client ID you
-       have registered in the
-       [Credentials on Developers Console for OAuth 2.0 client IDs][6].
+...
 
-1. [Optional]: User Authenticating with Google Accounts in other Applications
-   Types
+### Cloud storage Bucket CORS Configuration
 
-    - Inside [Constants.java](src/main/java/com/tinyinsta/Constants.java)
-      you will find placeholders for Android applications using Google Accounts
-      client IDs registered in the
-      [Credentials on Developers Console for OAuth 2.0 client IDs][6].
+```bash
+printf '[
+  {
+    "maxAgeSeconds": 60,
+    "method": [
+      "GET",
+      "HEAD",
+      "DELETE",
+      "POST",
+      "PUT"
+    ],
+    "origin": [
+      "http://localhost:3000",
+      "http://localhost",
+      "https://localhost:3000",
+      "https://localhost",
+      "localhost",
+      "localhost:3000",
+      "http://front-dot-{{YOUR_PROJECT_ID}}.oa.r.appspot.com",
+      "https://front-dot-{{YOUR_PROJECT_ID}}.oa.r.appspot.com"
+    ],
+    "responseHeader": [
+      "Content-Type",
+      "Access-Control-Allow-Origin",
+      "x-goog-resumable"
+    ]
+  }
+]' > cors.json
 
-    - Note: iOS support should work but has not been fully tested.
+gsutil cors set cors.json gs://your_bucket_id
+```
 
-    - These client IDs are used when defining annotation for this sample API
-      found in [Greetings.java](src/main/java/com/example/helloendpoints/Greetings.java).
+### Download
 
-    - You can read more about different user authentication supported [here][12].
+```bash
+git clone mdolr:instars-back
+```
 
+## Run locally
 
+### Set environment credentials
 
-1. [Optional]: **We recommend new projects should use Cloud Endpoints Frameworks
-   v2.0**. Alternatively, use Cloud Endpoints Frameworks v2.0 Maven and Gradle client library
-   generation plugins with Cloud Endpoints Frameworks v1.0.
+```bash
+# Windows:
+set GOOGLE_APPLICATION_CREDENTIALS=/ABSOLUTE/PATH/TO/name_of_your_service_account_priv_key.json
 
-    - Uncomment `Endpoints Frameworks v1.0` sections and comment
-        `Endpoints Frameworks v2.0` sections in the following files.
+# Mac / Linux
+export GOOGLE_APPLICATION_CREDENTIALS=/ABSOLUTE/PATH/TO/name_of_your_service_account_priv_key.json
+```
 
-      ```
-        pom.xml
-        build.gradle
-        src/main/webapp/WEB-INF/web.xml
-      ```
+### Start the development server
 
+```bash
+mvn clean appengine:run # starts the server on port 8080
+```
 
+- Web server is accessible at [localhost:8080](http://localhost:8080)
 
-1. Build and Run the application locally at [http://localhost:8080][5] by using:
+- API Explorer is situated at [localhost:8080/\_ah/api/explorer](http://localhost:8080/_ah/api/explorer)
 
-    `mvn clean appengine:run`
+- Datastore emulator is situated at [localhost:8080/\_ah/admin](http://localhost:8080/_ah/admin)
 
-1. Explore local server's API explorer by browsing to:
+## Deploy on Google App Engine
 
-    [http://localhost:8080/_ah/api/explorer][13]
+### Build and deploy the build to Google App Engine
 
-1. Generate the discovery document located at
-   `target/discovery-docs/helloworld-v1-rest.discovery` by using:
+```bash
+mvn clean appengine:deploy
+```
 
-    `mvn endpoints-framework:discoveryDocs`
+### Generate the OpenAPI file to generate the Google Endpoints portal
 
-1. Generate the client library and readme located at
-   `target/client-libs/helloworld-v1-java.zip` by using:
+```bash
+mvn endpoints-framework:openApiDocs
+gcloud endpoints services deploy target/openapi-docs/openapi.json
+```
 
-    `mvn endpoints-framework:clientLibs`
+# Our approach to scaling an instagram clone with Google App Engine & Google Datastore
 
-1. Build and Deploy your application to Google App Engine by using:
+## Objectives
 
-    `mvn clean appengine:deploy`
+- Requests should be responsive (less than 500ms accounting network latency)
+- Queries complexity should be proportional to the size of the results (only query what you need / no scans)
+- The app should scale and support contention and concurrent requests as much as possible
 
+## Kinds
 
-1. Run the application locally at [http://localhost:8080][5] by using:
+## Keys definition
 
-    `gradle clean appengineRun`
+## Cloud storage upload
 
-1. Explore local server's API explorer by browsing to:
+# Load-testing results
 
-    [http://localhost:8080/_ah/api/explorer][13]
+## Likes per seconds on a single post
 
-1. Generate the discovery document located at
-   `build/endpointsDiscoveryDocs/helloworld-v1-rest.discovery` by using:
+The goal here was to measure the throughput our system could handle on a single post. The likes per second load-testing was conducted using [Siege](https://github.com/JoeDog/siege) with the following settings:
 
-   `gradle endpointsDiscoveryDocs`
+- Time duration: 30 seconds
+- Concurrent users: 255 users
 
-1. Generate the client library located at
-   `build/endpointsClientLibs/helloworld-v1-java.zip` by using:
+We have conducted the tests with varying batch sizes, the "Hit rate" describes the percentage of requests that did not receive a 5XX server code.
+| MAX_BATCH_SIZE | Average likes per second | Hit rate |
+|----------------|--------------------------|-----|
+| 39000 | ~45 likes/s | 100% |
+| 50 | 80-95 likes/s | 98% |
+| 25 | ~45 likes/s | 96% |
 
-    `gradle endpointsClientLibs`
+The hit rate is under 100% with smaller batch sizes as the batch size limit is reached more often which leads to queries updating 2 entity groups at once happening more often.
 
-1. Deploy your application to Google App Engine by using:
+We consider it a relatively small and acceptable error rate but it means there are error nonetheless.
 
-    `gradle clean appengineDeploy`
+## Timeline with varying pagination size
 
-[1]: https://cloud.google.com/appengine/docs/java/
-[2]: http://java.com/en/
-[3]: https://cloud.google.com/endpoints/docs/frameworks/legacy/v1/java
-[4]: https://cloud.google.com/appengine/docs/java/tools/maven
-[5]: http://localhost:8080/
-[6]: https://console.developers.google.com/project/_/apiui/credential
-[7]: https://cloud.google.com/endpoints/docs/frameworks/legacy/v1/java/migrating
-[8]: https://cloud.google.com/endpoints/docs/frameworks/java/about-cloud-endpoints-frameworks
-[9]: https://cloud.google.com/endpoints/docs/frameworks/java/quickstart-frameworks-java
-[10]: https://github.com/GoogleCloudPlatform/endpoints-framework-maven-plugin
-[11]: https://github.com/GoogleCloudPlatform/endpoints-framework-gradle-plugin
-[12]: https://cloud.google.com/endpoints/docs/authenticating-users-frameworks
-[13]: http://localhost:8080/_ah/api/explorer
-[14]: https://github.com/GoogleCloudPlatform/app-maven-plugin
-[15]: https://github.com/GoogleCloudPlatform/app-gradle-plugin
+We tried to see how our timeline generation system scaled with an increasing pagination size, of course the sizes tested here would never be used in production as it makes no sense to load that much posts at once from an user experience standpoint.
 
+### Results on local server
+
+![post a picture performance](https://media.discordapp.net/attachments/893492288016244816/913913476739633172/Average_time_in_ms_to_load_n_posts_in_one_request_without_pagination_local.png)
+
+### Results on the deployed appengine
+
+![post a picture performance](https://media.discordapp.net/attachments/893492288016244816/913913476932599869/Average_time_in_ms_to_load_n_posts_in_one_request_without_pagination_deployed.png)
+
+As expected our app doesn't scale with an increasing pagination size, this is not surprising given the architectural choices that we made
+
+In production we will probably want to use a pagination size ranging from 5 to 10 posts depending on how fast the average user scrolls
+
+## Post a picture varying followers count
+
+- Tests were ran locally and on the deployed appengine.
+- The number of followers varried between (10, 100 and 500 followers)
+- Results are based on an average of 30 requets.
+
+### Results on local server
+
+![post a picture performance](https://media.discordapp.net/attachments/893492288016244816/913911296880160808/Post_a_picture_performance_per_number_of_Followers_local.png)
+
+- The average total time fluctuates around 330ms
+- The results aren't affected by the increase of the number of Post_a_picture_performance_per_number_of_Followers_local
+
+### Results on the deployed appengine
+
+![post a picture performance](https://media.discordapp.net/attachments/893492288016244816/913912606975209502/Post_a_picture_performance_per_number_of_Followers_Deployed.png)
+
+- The average total time fluctuates around 500ms
+- The "Post" query has become significantly more time consuming
