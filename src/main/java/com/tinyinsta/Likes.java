@@ -45,14 +45,14 @@ public class Likes {
 
         Entity post = datastore.get(KeyFactory.createKey("Post", postId));
 
-        if(new ExistenceQuery().check("PostLiker", post.getKey(), userId)){
-          throw new ConflictException("You've already liked this post");
-        }
-
         AvailableBatches availableBatches = new AvailableBatches(post, "PostLiker");
 
         TransactionOptions options = TransactionOptions.Builder.withXG(true);
         Transaction txn = datastore.beginTransaction(options);
+
+        if(new ExistenceQuery().check("PostLiker", post.getKey(), userId)){
+          throw new ConflictException("You've already liked this post");
+        }
 
         int likesCount;
 
