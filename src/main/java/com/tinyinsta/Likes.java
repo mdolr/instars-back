@@ -58,36 +58,69 @@ public class Likes {
 
         try {
             Entity availableBatch = availableBatches.getOneRandom();
-            ArrayList<String> batch = (ArrayList<String>) availableBatch.getProperty("batch");
-
+            
             // Retrieve the i part of the i + '-' + parentId
             String batchId = (String) availableBatch.getProperty("id");
-            int batchNumber = Integer.valueOf(batchId.split("-")[0]);
+
+            // Re-get the batch in the transaction this time
+            //availableBatch = datastore.get(KeyFactory.createKey("PostLiker", batchId));
+            ArrayList<String> batch = (ArrayList<String>) availableBatch.getProperty("batch");
 
             if(batch == null) {
                 batch = new ArrayList<>();
             }
             
-            // Append the user to the batch
-            batch.add(userId);
+            // The batch is not filled yet
+            if(batch.size() + 1 <= Constants.MAX_BATCH_SIZE) {
+                // Append the user to the batch
+                batch.add(userId);
 
-            // Update the batch
-            availableBatch.setProperty("batch", batch);
-            availableBatch.setProperty("size", batch.size());
-            availableBatch.setProperty("updatedAt", new Date());
-            datastore.put(availableBatch);
+                // Update the batch
+                availableBatch.setProperty("batch", batch);
+                availableBatch.setProperty("size", batch.size());
+                availableBatch.setProperty("updatedAt", new Date());
+
+                // In case this is the last element we're adding to the batch
+                if(batch.size() + 1 == Constants.MAX_BATCH_SIZE) {
+                    int batchNumber = Integer.valueOf(batchId.split("-")[0]);
+                  
+                    // Update the batchIndex to set the current batch as filled
+                    ArrayList<Integer> batchIndex = (ArrayList<Integer>) post.getProperty("batchIndex");
+                    batchIndex.set(batchNumber, 1);
+
+                    // Update the post's batchIndex
+                    post.setProperty("batchIndex", batchIndex);           
+                    datastore.put(post);
+                }
+
+                datastore.put(availableBatch);
+            }
+
+            // The batch has been filled between we got the available batch and the transactino started
+            // so we create a new one
+            else {
+                ArrayList<Integer> batchIndex = (ArrayList<Integer>) post.getProperty("batchIndex");
+                Entity newBatch = new PostLikers().createEntity(post, batchIndex.size());
+
+                batchIndex.add(0);
+                post.setProperty("batchIndex", batchIndex);
+                datastore.put(post);
+
+                batch = new ArrayList<>();
+
+                // Append the user to the batch
+                batch.add(userId);
+
+                // Update the batch
+                newBatch.setProperty("batch", batch);
+                newBatch.setProperty("size", batch.size());
+                newBatch.setProperty("updatedAt", new Date());
+
+                datastore.put(newBatch);
+            }
 
             // Count all available batches size + completed batches number * batch max size
             likesCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE);
-
-            // Update the batch index when a batch is completely filled
-            if(batch.size() >= Constants.MAX_BATCH_SIZE) {
-              ArrayList<Integer> batchIndex = (ArrayList<Integer>) post.getProperty("batchIndex");
-              batchIndex.set(batchNumber, 1);
-
-              post.setProperty("batchIndex", batchIndex);           
-              datastore.put(post);
-            }
 
             txn.commit();
         } finally {

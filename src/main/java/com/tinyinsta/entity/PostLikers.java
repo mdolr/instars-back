@@ -4,7 +4,7 @@ import com.google.appengine.api.datastore.*;
 import java.util.*;
 
 public class PostLikers {
-    public void createEntity(Entity post, int batchNumber) {
+    public Entity createEntity(Entity post, int batchNumber) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         String postId = (String) post.getProperty("id");
@@ -20,5 +20,6 @@ public class PostLikers {
         postLiker.setProperty("updatedAt", new Date());
         
         datastore.put(postLiker);
+        return postLiker;
     }
 }
