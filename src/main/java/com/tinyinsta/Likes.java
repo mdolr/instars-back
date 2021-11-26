@@ -13,6 +13,7 @@ import com.tinyinsta.entity.PostLikers;
 
 import javax.inject.Named;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Date;
 
 import com.tinyinsta.dto.PostDTO;
@@ -45,12 +46,13 @@ public class Likes {
         Entity post = datastore.get(KeyFactory.createKey("Post", postId));
 
         if(new ExistenceQuery().check("PostLiker", post.getKey(), userId)){
-            throw new ConflictException("You've already liked this post");
+          throw new ConflictException("You've already liked this post");
         }
 
-        //Transaction txn = datastore.beginTransaction();
-
         AvailableBatches availableBatches = new AvailableBatches(post, "PostLiker");
+
+        TransactionOptions options = TransactionOptions.Builder.withXG(true);
+        Transaction txn = datastore.beginTransaction(options);
 
         int likesCount;
 
@@ -73,6 +75,7 @@ public class Likes {
             availableBatch.setProperty("batch", batch);
             availableBatch.setProperty("size", batch.size());
             availableBatch.setProperty("updatedAt", new Date());
+            datastore.put(availableBatch);
 
             // Count all available batches size + completed batches number * batch max size
             likesCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE);
@@ -83,16 +86,15 @@ public class Likes {
               batchIndex.set(batchNumber, 1);
 
               post.setProperty("batchIndex", batchIndex);           
+              datastore.put(post);
             }
 
-            datastore.put(availableBatch);
-
-            //txn.commit();
+            txn.commit();
         } finally {
-            //if (txn.isActive()) {
-            //    txn.rollback();
-            //} else {
-                datastore.put(post);
+            if (txn.isActive()) {
+                txn.rollback();
+            }// else {
+                //datastore.put(post);
             //}
         }
         
