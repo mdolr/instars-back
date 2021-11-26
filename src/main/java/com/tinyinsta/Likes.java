@@ -59,9 +59,6 @@ public class Likes {
         try {
             Entity availableBatch = availableBatches.getOneRandom();
             
-            // Retrieve the i part of the i + '-' + parentId
-            String batchId = (String) availableBatch.getProperty("id");
-
             // Re-get the batch in the transaction this time
             //availableBatch = datastore.get(KeyFactory.createKey("PostLiker", batchId));
             ArrayList<String> batch = (ArrayList<String>) availableBatch.getProperty("batch");
@@ -81,7 +78,10 @@ public class Likes {
                 availableBatch.setProperty("updatedAt", new Date());
 
                 // In case this is the last element we're adding to the batch
-                if(batch.size() + 1 == Constants.MAX_BATCH_SIZE) {
+                if(batch.size() == Constants.MAX_BATCH_SIZE) {
+                    
+                    // Retrieve the i part of the i + '-' + parentId
+                    String batchId = (String) availableBatch.getProperty("id");
                     int batchNumber = Integer.valueOf(batchId.split("-")[0]);
                   
                     // Update the batchIndex to set the current batch as filled
