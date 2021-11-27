@@ -158,6 +158,13 @@ By default we create BUCKET_COUNT (e.g 5) entities whenever a post or user is cr
 
 ## Cloud storage upload
 
+Because Google App Engine has a timeout on requests, and the upload can take a long time depending on the user's connection, we have decided to shift the upload process directly to Google Cloud Storage without processing the image on our backend
+
+We have made use of [Google recommendations](https://cloud.google.com/blog/products/storage-data-transfer/uploading-images-directly-to-cloud-storage-by-using-signed-url) on setting up uploads via signed URL. The upload follows the following flow:
+
+![Upload flow](https://cdn.discordapp.com/attachments/458197576676671488/914133817135071252/upload_flow_diagram.png)
+_Diagram generated with [diagram.codes](https://www.diagram.codes/)_
+
 # Load-testing results
 
 ## Likes per seconds on a single post
