@@ -129,6 +129,33 @@ gcloud endpoints services deploy target/openapi-docs/openapi.json
 
 ## Keys definition
 
+### User keys
+
+The most natural choice for user keys was to use the Google Account User ID which is given to us by Google App Engine when an Authorization token is included in the headers
+
+### Post keys
+
+Because of the datastore limitations we can't use a sort method on our queries so we need to rely on the datastore sorting entities by ascending keys by default.
+
+Another problem is that we need to deal with contention, so we need to split posts in different buckets.
+
+We achieved that by formatting the post's key as `{{BUCKET_NUMBER}}-{{SUBSTRACTED_TIMESTAMP}}` where :
+
+- BUCKET_NUMBER is a random integer between 0 and the number of buckets we want
+- SUBSTRACTED_TIMESTAMP is the maximum long supported in Java minus the current timestamp
+
+By choosing such a format for our keys the datastore auto-sorts the posts in a descending order which is handy to build our timeline
+
+### Post receivers
+
+The key is built of an ancestor key set to the parent Post, and the default random Google key for the post receiver entity
+
+### Post likers & User Followers
+
+The keys for both of these entities are built in the same way which is `{{BUCKET_NUMBER}}-{{(USER or POST)_ID}}`
+
+By default we create BUCKET_COUNT (e.g 5) entities whenever a post or user is created in the Datastore. And then as the different batches fill we create more buckets in order to always keep at least non-filled BUCKETS_COUNT batches.
+
 ## Cloud storage upload
 
 # Load-testing results
@@ -140,7 +167,7 @@ The goal here was to measure the throughput our system could handle on a single 
 - Time duration: 30 seconds
 - Concurrent users: 255 users
 
-We have conducted the tests with varying batch sizes, the "Hit rate" describes the percentage of requests that did not receive a 5XX server code.
+We have conducted the tests with varying batch sizes, the "Hit rate" describes the percentage of requests that did not receive a 5XX HTTP status code from the server.
 | MAX_BATCH_SIZE | Average likes per second | Hit rate |
 |----------------|--------------------------|-----|
 | 39000 | ~45 likes/s | 100% |
@@ -149,7 +176,7 @@ We have conducted the tests with varying batch sizes, the "Hit rate" describes t
 
 The hit rate is under 100% with smaller batch sizes as the batch size limit is reached more often which leads to queries updating 2 entity groups at once happening more often.
 
-We consider it a relatively small and acceptable error rate but it means there are error nonetheless.
+We consider it a relatively small and acceptable error rate but it means there are errors nonetheless.
 
 ## Timeline with varying pagination size
 
