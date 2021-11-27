@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Map;
 
 public class AvailableBatches {
-    private String kind;
+    private final String kind;
     private Key ancestorKey;
-    private List<Entity> availableBatches;
+    private final List<Entity> availableBatches;
     public int fullBatches;
     public int nonFullBatches;
     public Entity entity;
@@ -31,9 +31,8 @@ public class AvailableBatches {
                 int batchState = ((Number) batchIndex.get(i)).intValue(); // Java cannot cast int to long blabla
 
                 if (batchState == 0) {
-                    String childId = String.valueOf(i) + "-" + ((String) entity.getProperty("id"));
-
-                    Key key;  
+                    String childId = i + "-" + entity.getProperty("id");
+                    Key key;
                     
                     if(this.kind == "UserFollower") {
                       key = KeyFactory.createKey(entity.getKey(), kind, childId);  
@@ -53,12 +52,11 @@ public class AvailableBatches {
             Iterable<Key> iterableKeys = batchKeys;
             
             Map<Key,Entity> availableBatchesMap = datastore.get(iterableKeys);
-            this.availableBatches = new ArrayList<Entity>(availableBatchesMap.values());
+            this.availableBatches = new ArrayList<>(availableBatchesMap.values());
     }
 
     public Entity getOneRandom() {
         Entity availableBatch;
-        ArrayList<String> batch = new ArrayList<>(); // In case we get an empty batch we need to declare it
 
         if(this.availableBatches.size() > 0) {
             int randomBatch = new RandomGenerator().get(0, this.availableBatches.size() - 1);

@@ -9,7 +9,7 @@ public class PostLikers {
 
         String postId = (String) post.getProperty("id");
 
-        String batchId = String.valueOf(String.valueOf(batchNumber) + "-" + postId);
+        String batchId = batchNumber + "-" + postId;
         Key key = KeyFactory.createKey("PostLiker", batchId);
 
         Entity postLiker = new Entity(key);

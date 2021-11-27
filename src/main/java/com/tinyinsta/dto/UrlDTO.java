@@ -1,7 +1,5 @@
 package com.tinyinsta.dto;
 
-import java.util.*;
-
 public class UrlDTO {
   public String URL;
 

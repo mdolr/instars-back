@@ -1,12 +1,6 @@
 package com.tinyinsta.dto;
 
-import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
-
-import java.util.*;
-import com.google.appengine.api.datastore.*;
 
 public class PaginationDTO {
   public String previous;

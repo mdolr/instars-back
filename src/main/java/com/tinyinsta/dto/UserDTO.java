@@ -1,9 +1,8 @@
 package com.tinyinsta.dto;
 
+import com.google.appengine.api.datastore.Entity;
+
 import java.util.Date;
-import java.util.HashMap;
-import java.util.*;
-import com.google.appengine.api.datastore.*;
 
 public class UserDTO {
   public String id;

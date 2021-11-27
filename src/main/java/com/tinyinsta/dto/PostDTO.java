@@ -1,10 +1,8 @@
 package com.tinyinsta.dto;
 
-import java.util.Date;
-import java.util.HashMap;
+import com.google.appengine.api.datastore.Entity;
 
-import java.util.*;
-import com.google.appengine.api.datastore.*;
+import java.util.Date;
 
 public class PostDTO {
   public String id;

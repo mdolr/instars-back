@@ -63,7 +63,7 @@ public class Users {
             // - followers : An UserFollowers entity which contains multiple lists of followers
 
             // Decode Authorization JWT
-            String token = (String) request.getHeader("Authorization");
+            String token = request.getHeader("Authorization");
             token = token.substring(token.indexOf(" ") + 1);
             
             String[] chunks = token.split("\\.");
@@ -90,7 +90,7 @@ public class Users {
             // Create the UserFollowers entity
             for (int i = 0; i < Constants.MAX_BUCKETS_NUMBER; i++) {
                 // Key  
-                String userFollowersId = String.valueOf(i) + "-" + reqUser.getId().toString();
+                String userFollowersId = i + "-" + reqUser.getId();
                 Key key = KeyFactory.createKey(newUser.getKey(),"UserFollower", userFollowersId);
 
                 // Create the UserFollowers entity
@@ -199,7 +199,7 @@ public class Users {
             int followersCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE) - 1;
             resultUser.setProperty("followers", followersCount);
 
-            Boolean hasFollowed = (Boolean) new ExistenceQuery().check("UserFollower", resultUser.getKey(), reqUser.getId());
+            Boolean hasFollowed = new ExistenceQuery().check("UserFollower", resultUser.getKey(), reqUser.getId());
             resultUser.setProperty("hasFollowed", hasFollowed);
 
             users.add(new UserDTO(resultUser, true, followersCount));
@@ -211,7 +211,7 @@ public class Users {
             int followersCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE) - 1;
             resultUser.setProperty("followers", followersCount);
 
-            Boolean hasFollowed = (Boolean) new ExistenceQuery().check("UserFollower", resultUser.getKey(), reqUser.getId());
+            Boolean hasFollowed = new ExistenceQuery().check("UserFollower", resultUser.getKey(), reqUser.getId());
             resultUser.setProperty("hasFollowed", hasFollowed);
 
             users.add(new UserDTO(resultUser, true, followersCount));
@@ -315,11 +315,11 @@ public class Users {
             Entity newUser = new Entity("User", (String) reqBody.get("id"));
 
             // Set the user properties
-            newUser.setProperty("id", (String) reqBody.get("id"));
-            newUser.setProperty("email", (String) reqBody.get("email"));
+            newUser.setProperty("id", reqBody.get("id"));
+            newUser.setProperty("email", reqBody.get("email"));
             newUser.setProperty("handle", ((String) reqBody.get("email")).split("@")[0]);
-            newUser.setProperty("name", (String) reqBody.get("name"));
-            newUser.setProperty("pictureURL", (String) reqBody.get("pictureURL")); 
+            newUser.setProperty("name", reqBody.get("name"));
+            newUser.setProperty("pictureURL", reqBody.get("pictureURL"));
             newUser.setProperty("createdAt", new Date());
             newUser.setProperty("updatedAt", new Date());
 
@@ -330,7 +330,7 @@ public class Users {
             // A for loop that loops 3 times
             for (int i = 0; i < 5; i++) {
                 // Key  
-                String userFollowersId = String.valueOf(i) + "-" + ((String) reqBody.get("id"));
+                String userFollowersId = i + "-" + reqBody.get("id");
                 Key key = KeyFactory.createKey(newUser.getKey(),"UserFollower", userFollowersId);
 
                 // Create the UserFollowers entity
@@ -351,7 +351,7 @@ public class Users {
                     userFollowers.setProperty("size", 0);
                 }
 
-                userFollowers.setProperty("parentId", (String) reqBody.get("id"));
+                userFollowers.setProperty("parentId", reqBody.get("id"));
                 userFollowers.setProperty("updatedAt", new Date());
 
                 // Put the UserFollowers entity in the datastore

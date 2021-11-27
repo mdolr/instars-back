@@ -1,11 +1,10 @@
 package com.tinyinsta.common;
 
-import com.google.api.server.spi.response.ConflictException;
 import com.google.appengine.api.datastore.*;
 import com.google.appengine.api.datastore.Query.*;
 
 public class ExistenceQuery {
-    public boolean check(String kind, Key ancestorKey, String searchedValue) throws ConflictException {
+    public boolean check(String kind, Key ancestorKey, String searchedValue) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         Query existenceQuery;
