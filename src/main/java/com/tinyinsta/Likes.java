@@ -133,7 +133,7 @@ public class Likes {
             //}
         }
         
-        int newBucketsCount = Constants.LIKES_MAX_BUCKETS_NUMBER - availableBatches.getNonFullBatchesCount();
+        int newBucketsCount = Constants.MAX_BUCKETS_NUMBER - availableBatches.getNonFullBatchesCount();
         
         if(newBucketsCount > 0) {
           ArrayList<Integer> batchIndex = (ArrayList<Integer>) post.getProperty("batchIndex");

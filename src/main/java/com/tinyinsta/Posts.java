@@ -36,11 +36,11 @@ public class Posts {
         PreparedQuery pq = datastore.prepare(q);
         List<Entity> results = pq.asList(FetchOptions.Builder.withDefaults());
 
-        ArrayList<PostDTO> posts = new ArrayList<PostDTO>();
+        ArrayList<PostDTO> posts = new ArrayList<>();
         
         // Recover likes and user info
         // Use posts.keySet() transform to array list and then sort the array list or smth
-        for(Entity post  : results){
+        for(Entity post : results){
             AvailableBatches availableBatches= new AvailableBatches(post, "PostLiker");
             // Count all available batches size + completed batches number * batch max size
             int likesCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE);
@@ -178,7 +178,7 @@ public class Posts {
         try {
             new PostReceivers().createEntity(user, post);
             
-            int nbBuckets = Constants.LIKES_MAX_BUCKETS_NUMBER;
+            int nbBuckets = Constants.MAX_BUCKETS_NUMBER;
 
             ArrayList<Integer> batchIndex = new ArrayList<Integer>();
 
