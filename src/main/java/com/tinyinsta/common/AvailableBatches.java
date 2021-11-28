@@ -9,58 +9,57 @@ import java.util.Map;
 public class AvailableBatches {
     private final String kind;
     private Key ancestorKey;
-    private final List<Entity> availableBatches;
+    private List<Entity> availableBatches;
     public int fullBatches;
     public int nonFullBatches;
+    private List<Key> availableBatchesKeys;
     public Entity entity;
 
     public AvailableBatches(Entity entity, String kind) {
         this.kind = kind;
         this.entity = entity;
+        this.availableBatchesKeys = new ArrayList<Key>();
         
-        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-            // Using entity.getProperty("batchIndex")
-            // find all occurences of 0
-            // and construct a list of keys
-            // formatted as index_where_we_find_a_0 + "-" + entity.getProperty("id")
-            // and then use the list to get all the batches
-            ArrayList<Integer> batchIndex = (ArrayList<Integer>) entity.getProperty("batchIndex");
-            List<Key> batchKeys = new ArrayList<>();
-            
-            for (int i = 0; i < batchIndex.size(); i++) {
-                int batchState = ((Number) batchIndex.get(i)).intValue(); // Java cannot cast int to long blabla
-
-                if (batchState == 0) {
-                    String childId = i + "-" + entity.getProperty("id");
-                    Key key;
-                    
-                    if(this.kind == "UserFollower") {
-                      key = KeyFactory.createKey(entity.getKey(), kind, childId);  
-                    } else {
-                      key = KeyFactory.createKey(kind, childId);  
-                    }
-
-                    batchKeys.add(key);
-                    this.nonFullBatches += 1;
-                } 
+        // Using entity.getProperty("batchIndex")
+        // find all occurences of 0
+        // and construct a list of keys
+        // formatted as index_where_we_find_a_0 + "-" + entity.getProperty("id")
+        // and then use the list to get all the batches
+        ArrayList<Integer> batchIndex = (ArrayList<Integer>) entity.getProperty("batchIndex");
+        List<Key> availableBatchesKeys = new ArrayList<>();
+        
+        for (int i = 0; i < batchIndex.size(); i++) {
+            int batchState = ((Number) batchIndex.get(i)).intValue(); // Java cannot cast int to long blabla
+          
+            if (batchState == 0) {
+                String childId = i + "-" + entity.getProperty("id");
+                Key key = KeyFactory.createKey(kind, childId);  
                 
-                else if(batchState == 1) {
-                    this.fullBatches += 1;
-                }
+                this.availableBatchesKeys.add(key);
+                this.nonFullBatches += 1;
+            } 
+            
+            else if(batchState == 1) {
+                this.fullBatches += 1;
             }
-            
-            Iterable<Key> iterableKeys = batchKeys;
-            
-            Map<Key,Entity> availableBatchesMap = datastore.get(iterableKeys);
-            this.availableBatches = new ArrayList<>(availableBatchesMap.values());
+        }
     }
 
-    public Entity getOneRandom() {
+    private void LoadAvailableBatches() {
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        Iterable<Key> iterableKeys = this.availableBatchesKeys;
+              
+        Map<Key,Entity> availableBatchesMap = datastore.get(iterableKeys);
+        this.availableBatches = new ArrayList<>(availableBatchesMap.values());
+    }
+
+    public Entity getOneRandom() throws EntityNotFoundException {
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
         Entity availableBatch;
 
-        if(this.availableBatches.size() > 0) {
-            int randomBatch = new RandomGenerator().get(0, this.availableBatches.size() - 1);
-            availableBatch = this.availableBatches.get(randomBatch);
+        if(this.availableBatchesKeys.size() > 0) {
+            int randomBatch = new RandomGenerator().get(0, this.availableBatchesKeys.size() - 1);
+            availableBatch = datastore.get(this.availableBatchesKeys.get(randomBatch));
         } else {
             availableBatch = new Entity(this.kind, this.ancestorKey);
         }
@@ -70,6 +69,7 @@ public class AvailableBatches {
 
     public int getSizeCount(){
         int count = 0;
+        this.LoadAvailableBatches();
 
         for (Entity batch : this.availableBatches){
             int batchSize = new Integer(batch.getProperty("size").toString());
