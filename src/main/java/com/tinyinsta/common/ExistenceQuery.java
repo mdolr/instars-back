@@ -8,20 +8,14 @@ public class ExistenceQuery {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
         Query existenceQuery;
+     
+        Filter parentFilter = new FilterPredicate("parentId", FilterOperator.EQUAL, ancestorKey.getName());
+        Filter batchFilter = new FilterPredicate("batch", FilterOperator.EQUAL, searchedValue);
+        CompositeFilter filter = CompositeFilterOperator.and(parentFilter, batchFilter);
 
-        if(kind == "UserFollower") {
-            existenceQuery = new Query(kind)
-                    .setAncestor(ancestorKey)
-                    .setFilter(new Query.FilterPredicate("batch", Query.FilterOperator.EQUAL, searchedValue));
-        } else {
-            Filter parentFilter = new FilterPredicate("parentId", FilterOperator.EQUAL, ancestorKey.getName());
-            Filter batchFilter = new FilterPredicate("batch", FilterOperator.EQUAL, searchedValue);
-            CompositeFilter filter = CompositeFilterOperator.and(parentFilter, batchFilter);
-
-            existenceQuery = new Query(kind)
-                    .setFilter(filter)
-                    .setKeysOnly(); 
-        }
+        existenceQuery = new Query(kind)
+                .setFilter(filter)
+                .setKeysOnly(); 
         
         QueryResultList<Entity> existenceResults = datastore.prepare(existenceQuery).asQueryResultList(FetchOptions.Builder.withLimit(1));
         

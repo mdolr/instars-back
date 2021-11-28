@@ -52,7 +52,7 @@ public class Likes {
 
         post = datastore.get(KeyFactory.createKey("Post", postId));
 
-        if(new ExistenceQuery().check("PostLiker", post.getKey(), userId)){
+        if(new ExistenceQuery().check("PostLiker", post.getKey(), userId)) {
           throw new ConflictException("You've already liked this post");
         }
 
@@ -134,15 +134,15 @@ public class Likes {
         int newBucketsCount = Constants.MAX_BUCKETS_NUMBER - availableBatches.getNonFullBatchesCount();
         
         if(newBucketsCount > 0) {
-          ArrayList<Integer> batchIndex = (ArrayList<Integer>) post.getProperty("batchIndex");
+            ArrayList<Integer> batchIndex = (ArrayList<Integer>) post.getProperty("batchIndex");
 
-          for (int i = 0; i < newBucketsCount; i++) {
-              new PostLikers().createEntity(post, batchIndex.size());
-              batchIndex.add(0);
-          }
+            for (int i = 0; i < newBucketsCount; i++) {
+                new PostLikers().createEntity(post, batchIndex.size());
+                batchIndex.add(0);
+            }
 
-          post.setProperty("batchIndex", batchIndex);
-          datastore.put(post);
+            post.setProperty("batchIndex", batchIndex);
+            datastore.put(post);
         }
 
         post.setProperty("hasLiked", true);

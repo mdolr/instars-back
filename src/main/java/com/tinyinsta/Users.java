@@ -91,7 +91,7 @@ public class Users {
             for (int i = 0; i < Constants.MAX_BUCKETS_NUMBER; i++) {
                 // Key  
                 String userFollowersId = i + "-" + reqUser.getId();
-                Key key = KeyFactory.createKey(newUser.getKey(),"UserFollower", userFollowersId);
+                Key key = KeyFactory.createKey("UserFollower", userFollowersId);
 
                 // Create the UserFollowers entity
                 Entity userFollowers = new Entity(key);
@@ -331,7 +331,7 @@ public class Users {
             for (int i = 0; i < 5; i++) {
                 // Key  
                 String userFollowersId = i + "-" + reqBody.get("id");
-                Key key = KeyFactory.createKey(newUser.getKey(),"UserFollower", userFollowersId);
+                Key key = KeyFactory.createKey("UserFollower", userFollowersId);
 
                 // Create the UserFollowers entity
                 Entity userFollowers = new Entity(key);

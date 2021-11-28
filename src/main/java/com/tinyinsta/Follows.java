@@ -45,53 +45,91 @@ public class Follows {
     // Then verify that the target exists
     Entity target = datastore.get(KeyFactory.createKey("User", targetId));
 
+    AvailableBatches availableBatches = new AvailableBatches(target, "UserFollower");
+    
+    TransactionOptions options = TransactionOptions.Builder.withXG(true);
+    Transaction txn = datastore.beginTransaction(options);
+
+    target = datastore.get(KeyFactory.createKey("User", targetId));
+
     //Check if user is already following
-    if(new ExistenceQuery().check("UserFollower", target.getKey(), userId)){
+    if(new ExistenceQuery().check("UserFollower", target.getKey(), userId)) {
         throw new ConflictException("You are already following this user");
     }
 
-    Transaction txn = datastore.beginTransaction();
-
-    AvailableBatches availableBatches = new AvailableBatches(target, "UserFollower");
-    
     int followersCount;
 
     try {
         Entity availableBatch = availableBatches.getOneRandom();
         ArrayList<String> batch = (ArrayList<String>) availableBatch.getProperty("batch");
 
-        // Retrieve the i part of the i + '-' + parentId
-        String batchId = (String) availableBatch.getProperty("id");
-        int batchNumber = Integer.valueOf(batchId.split("-")[0]);
-        
-        
         if(batch == null) {
             batch = new ArrayList<>();
         }
         
-        // Append the user to the batch
-        batch.add(userId);
+        // The batch is not filled yet
+        if(batch.size() + 1 <= Constants.MAX_BATCH_SIZE) {
+            // Append the user to the batch
+            batch.add(userId);
 
-        // Update the batch
-        availableBatch.setProperty("batch", batch);
-        availableBatch.setProperty("size", batch.size());
-        availableBatch.setProperty("updatedAt", new Date());
+            // Update the batch
+            availableBatch.setProperty("batch", batch);
+            availableBatch.setProperty("size", batch.size());
+            availableBatch.setProperty("updatedAt", new Date());
 
-        // Count all available batches size + completed batches number * batch max size
-        // -1 to remove self follower from count
-        followersCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE) - 1;
+            // In case this is the last element we're adding to the batch
+            if(batch.size() == Constants.MAX_BATCH_SIZE) {
+                
+                // Retrieve the i part of the i + '-' + parentId
+                String batchId = (String) availableBatch.getProperty("id");
+                int batchNumber = Integer.valueOf(batchId.split("-")[0]);
+              
+                // Update the batchIndex to set the current batch as filled
+                ArrayList<Integer> batchIndex = (ArrayList<Integer>) target.getProperty("batchIndex");
+                batchIndex.set(batchNumber, 1);
 
-        // Update the batch index when a batch is completely filled
-        if(batch.size() >= Constants.MAX_BATCH_SIZE) {
-            ArrayList<Integer> batchIndex = (ArrayList<Integer>) target.getProperty("batchIndex");
-            batchIndex.set(batchNumber, 1);
+                // Update the target's batchIndex
+                target.setProperty("batchIndex", batchIndex);           
+                datastore.put(target);
+            }
 
-            user.setProperty("batchIndex", batchIndex);
-            datastore.put(target);
+            datastore.put(availableBatch);
         }
 
-        // Then put the batch back in the datastore
-        datastore.put(availableBatch);
+        // The batch has been filled between we got the available batch and the transactino started
+        // so we create a new one
+        else {
+            ArrayList<Integer> batchIndex = (ArrayList<Integer>) target.getProperty("batchIndex");
+          
+            String userFollowersId = batchIndex.size() + "-" + targetId;
+          
+            Key key = KeyFactory.createKey("UserFollower", userFollowersId);
+            Entity newBatch = new Entity(key);
+            
+            newBatch.setProperty("id", userFollowersId);
+            newBatch.setProperty("parentId", targetId);
+            
+            batchIndex.add(0);
+            
+            target.setProperty("batchIndex", batchIndex);
+            datastore.put(target);
+
+            batch = new ArrayList<>();
+
+            // Append the user to the batch
+            batch.add(userId);
+
+            // Update the batch
+            newBatch.setProperty("batch", batch);
+            newBatch.setProperty("size", batch.size());
+            newBatch.setProperty("updatedAt", new Date());
+
+            datastore.put(newBatch);
+        }
+
+        // Count all available batches size + completed batches number * batch max size
+        followersCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE) - 1;
+        
         txn.commit();
     } finally {
         if (txn.isActive()) {
@@ -102,26 +140,26 @@ public class Follows {
     int newBucketsCount = Constants.MAX_BUCKETS_NUMBER - availableBatches.getNonFullBatchesCount();
         
     if(newBucketsCount > 0) {
-      ArrayList<Integer> batchIndex = (ArrayList<Integer>) target.getProperty("batchIndex");
+        ArrayList<Integer> batchIndex = (ArrayList<Integer>) target.getProperty("batchIndex");
 
-      for (int i = 0; i < newBucketsCount; i++) {
-          String userFollowersId = batchIndex.size() + "-" + targetId;
-          Key key = KeyFactory.createKey(target.getKey(), "UserFollower", userFollowersId);
+        for (int i = 0; i < newBucketsCount; i++) {
+            String userFollowersId = batchIndex.size() + "-" + targetId;
+            Key key = KeyFactory.createKey("UserFollower", userFollowersId);
 
-          // Create the UserFollowers entity
-          Entity userFollowers = new Entity(key);
-          userFollowers.setProperty("id", userFollowersId);
-          userFollowers.setProperty("batch", null);
-          userFollowers.setProperty("size", 0);
-          userFollowers.setProperty("parentId", targetId);
-          userFollowers.setProperty("updatedAt", new Date());
+            // Create the UserFollowers entity
+            Entity userFollowers = new Entity(key);
+            userFollowers.setProperty("id", userFollowersId);
+            userFollowers.setProperty("batch", null);
+            userFollowers.setProperty("size", 0);
+            userFollowers.setProperty("parentId", targetId);
+            userFollowers.setProperty("updatedAt", new Date());
 
-          datastore.put(userFollowers);
-          batchIndex.add(0);
-      }
+            datastore.put(userFollowers);
+            batchIndex.add(0);
+        }
 
-      target.setProperty("batchIndex", batchIndex);
-      datastore.put(target);
+        target.setProperty("batchIndex", batchIndex);
+        datastore.put(target);
     }
 
     target.setProperty("hasFollowed", true);
