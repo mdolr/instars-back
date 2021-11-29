@@ -277,8 +277,12 @@ public class Users {
         int followersCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE) - 1;
         resultUser.setProperty("followers", followersCount);
 
-        Boolean hasFollowed = new ExistenceQuery().check("UserFollower", resultUser.getKey(), reqUser.getId());
-        resultUser.setProperty("hasFollowed", hasFollowed);
+        if(reqUser != null) {
+            Boolean hasFollowed = new ExistenceQuery().check("UserFollower", resultUser.getKey(), reqUser.getId());
+            resultUser.setProperty("hasFollowed", hasFollowed);
+        } else {
+            resultUser.setProperty("hasFollowed", false);
+        }
 
         return new UserDTO(resultUser, true, followersCount);
     }
