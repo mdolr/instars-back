@@ -76,8 +76,8 @@ public class Posts {
 
         Entity user = datastore.get(KeyFactory.createKey("User", reqUser.getId()));
 
-        String projectId = "tinyinsta-web";
-        String bucketName = "instars-23pnm1d4";
+        String projectId = Constants.CLOUD_STORAGE_PROJECT_ID;
+        String bucketName = Constants.CLOUD_STORAGE_BUCKET_NAME;
 
         int randomBucket = new RandomGenerator().get(0, Constants.TIMELINE_BUCKETS - 1);
 
@@ -153,8 +153,8 @@ public class Posts {
             throw new UnauthorizedException("Post author doesn't match user");
         }
 
-        String projectId = "tinyinsta-web";
-        String bucketName = "instars-23pnm1d4";
+        String projectId = Constants.CLOUD_STORAGE_PROJECT_ID;
+        String bucketName = Constants.CLOUD_STORAGE_BUCKET_NAME;
 
         String objectName = (String) post.getProperty("pictureName");
 
