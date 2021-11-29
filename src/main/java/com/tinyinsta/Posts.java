@@ -35,7 +35,7 @@ public class Posts {
         ArrayList<PostDTO> posts = new ArrayList<>();
 
         // No need to get the author for each post :)
-        Entity author = datastore.get(KeyFactory.createKey("User", post.getProperty("authorId").toString()));
+        Entity author = datastore.get(KeyFactory.createKey("User", authorId));
         
         // Recover likes and user info
         // Use posts.keySet() transform to array list and then sort the array list or smth
