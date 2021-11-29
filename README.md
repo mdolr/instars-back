@@ -191,11 +191,11 @@ We tried to see how our timeline generation system scaled with an increasing pag
 
 ### Results on local server
 
-![post a picture performance](https://media.discordapp.net/attachments/893492288016244816/913913476739633172/Average_time_in_ms_to_load_n_posts_in_one_request_without_pagination_local.png)
+![post a picture performance](https://media.discordapp.net/attachments/893492288016244816/914812451080527882/Average_time_in_ms_to_load_n_posts_in_one_request_without_pagination_local.png)
 
 ### Results on the deployed appengine
 
-![post a picture performance](https://media.discordapp.net/attachments/893492288016244816/913913476932599869/Average_time_in_ms_to_load_n_posts_in_one_request_without_pagination_deployed.png)
+![post a picture performance](https://media.discordapp.net/attachments/893492288016244816/914814201296453652/Average_time_in_ms_to_load_n_posts_in_one_request_without_pagination_deployed.png)
 
 As expected our app doesn't scale with an increasing pagination size, this is not surprising given the architectural choices that we made
 
