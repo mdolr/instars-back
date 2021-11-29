@@ -121,9 +121,6 @@ public class Likes {
                 datastore.put(newBatch);
             }
 
-            // Count all available batches size + completed batches number * batch max size
-            likesCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE);
-
             txn.commit();
         } finally {
             if (txn.isActive()) {
@@ -144,6 +141,9 @@ public class Likes {
             post.setProperty("batchIndex", batchIndex);
             datastore.put(post);
         }
+
+        // Count all available batches size + completed batches number * batch max size
+        likesCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE);
 
         post.setProperty("hasLiked", true);
         

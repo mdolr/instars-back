@@ -9,8 +9,11 @@ public class PostReceivers {
     public void createEntity(Entity user, Entity post) {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
-        Query q = new Query("UserFollower").setAncestor(user.getKey());
+        String userId = (String) user.getProperty("id");
 
+        Query q = new Query("UserFollower")
+                    .setFilter(new Query.FilterPredicate("parentId", Query.FilterOperator.EQUAL, userId));
+                    
         PreparedQuery pq = datastore.prepare(q);
         List<Entity> followers = pq.asList(FetchOptions.Builder.withDefaults());
 
