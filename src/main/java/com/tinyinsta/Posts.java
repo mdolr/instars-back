@@ -22,12 +22,9 @@ import java.util.concurrent.TimeUnit;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Posts {
-    @ApiMethod(name = "posts.getAll", httpMethod = "get", path = "posts/{authorId}")
+    @ApiMethod(name = "posts.getAll", httpMethod = "get", path = "posts")
     public ArrayList<PostDTO> getAll(User reqUser, @Named("authorId") String authorId) throws EntityNotFoundException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-
-        //Check if user exists
-        datastore.get(KeyFactory.createKey("User", reqUser.getId()));
 
         Query q = new Query("Post");
         q.setFilter(new Query.FilterPredicate("authorId", Query.FilterOperator.EQUAL, authorId));
@@ -36,19 +33,26 @@ public class Posts {
         List<Entity> results = pq.asList(FetchOptions.Builder.withLimit(20));
 
         ArrayList<PostDTO> posts = new ArrayList<>();
+
+        // No need to get the author for each post :)
+        Entity author = datastore.get(KeyFactory.createKey("User", post.getProperty("authorId").toString()));
         
         // Recover likes and user info
         // Use posts.keySet() transform to array list and then sort the array list or smth
         for(Entity post : results){
             AvailableBatches availableBatches= new AvailableBatches(post, "PostLiker");
+            
             // Count all available batches size + completed batches number * batch max size
             int likesCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE);
             post.setProperty("likes", likesCount);
 
-            Boolean hasLiked = new ExistenceQuery().check("PostLiker", post.getKey(), reqUser.getId());
-            post.setProperty("hasLiked", hasLiked);
+            if(reqUser != null) {
+                Boolean hasLiked = new ExistenceQuery().check("PostLiker", post.getKey(), reqUser.getId());
+                post.setProperty("hasLiked", hasLiked);
+            } else {
+                post.setProperty("hasLiked", false);
+            }
 
-            Entity author = datastore.get(KeyFactory.createKey("User", post.getProperty("authorId").toString()));
             posts.add(new PostDTO(post, author, likesCount));
         }
 
