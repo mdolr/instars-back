@@ -127,6 +127,30 @@ gcloud endpoints services deploy target/openapi-docs/openapi.json
 
 ## Kinds
 
+### Post
+
+![Kind Post](https://media.discordapp.net/attachments/903607396054741062/914830587452325938/unknown.png?width=598&height=669)
+
+### PostLiker
+
+![Kind PostLiker](https://media.discordapp.net/attachments/903607396054741062/914830836040351754/unknown.png)
+
+### PostReceiver
+
+![Kind PostReceiver](https://media.discordapp.net/attachments/903607396054741062/914831910948204544/unknown.png)
+
+### PostReceiver
+
+![Kind PostReceiver](https://media.discordapp.net/attachments/903607396054741062/914831910948204544/unknown.png)
+
+### User
+
+![Kind User](https://media.discordapp.net/attachments/903607396054741062/914830512865042483/unknown.png?width=493&height=670)
+
+### UserFollower
+
+![Kind UserFollower](https://media.discordapp.net/attachments/903607396054741062/914836052978577428/unknown.png)
+
 ## Keys definition
 
 ### User keys
