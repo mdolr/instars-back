@@ -33,7 +33,7 @@ public class Posts {
         q.setFilter(new Query.FilterPredicate("authorId", Query.FilterOperator.EQUAL, authorId));
 
         PreparedQuery pq = datastore.prepare(q);
-        List<Entity> results = pq.asList(FetchOptions.Builder.withDefaults());
+        List<Entity> results = pq.asList(FetchOptions.Builder.withLimit(20));
 
         ArrayList<PostDTO> posts = new ArrayList<>();
         
