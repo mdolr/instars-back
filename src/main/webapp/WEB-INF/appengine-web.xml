@@ -5,8 +5,4 @@
     <system-properties>
         <property name="java.util.logging.config.file" value="WEB-INF/logging.properties"/>
     </system-properties>
-    <env-variables>
-        <env-var name="GOOGLE_APPLICATION_CREDENTIALS"
-                 value="src/main/webapp/WEB-INF/default-account-credentials.json" />
-    </env-variables>
 </appengine-web-app>
