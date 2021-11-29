@@ -87,8 +87,9 @@ public class Posts {
         String pictureId = UUID.randomUUID().toString();
 
         String fileType = (String) reqBody.get("fileType");
+        String fileName = (String) reqBody.get("fileName");
         
-        String fileExtension = fileType.substring(fileType.lastIndexOf("/") + 1);
+        String fileExtension = fileName.substring(fileName.lastIndexOf(".") + 1);
         String uploadFileName = pictureId + "." + fileExtension;
 
         Storage storage = StorageOptions.newBuilder().setProjectId(projectId).build()
@@ -99,7 +100,7 @@ public class Posts {
 
         // Generate Signed URL
         Map<String, String> extensionHeaders = new HashMap<>();
-        extensionHeaders.put("Content-Type", (String) reqBody.get("fileType"));
+        extensionHeaders.put("Content-Type", fileType);
 
         URL url = storage.signUrl(blobInfo, 15, TimeUnit.MINUTES, Storage.SignUrlOption.httpMethod(HttpMethod.PUT),
                 Storage.SignUrlOption.withExtHeaders(extensionHeaders), Storage.SignUrlOption.withV4Signature());
