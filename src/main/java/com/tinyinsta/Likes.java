@@ -50,8 +50,6 @@ public class Likes {
         TransactionOptions options = TransactionOptions.Builder.withXG(true);
         Transaction txn = datastore.beginTransaction(options);
 
-        post = datastore.get(KeyFactory.createKey("Post", postId));
-
         if(new ExistenceQuery().check("PostLiker", post.getKey(), userId)) {
           throw new ConflictException("You've already liked this post");
         }
@@ -87,6 +85,7 @@ public class Likes {
                     int batchNumber = Integer.valueOf(batchId.split("-")[0]);
                   
                     // Update the batchIndex to set the current batch as filled
+                    post = datastore.get(KeyFactory.createKey("Post", postId));
                     ArrayList<Integer> batchIndex = (ArrayList<Integer>) post.getProperty("batchIndex");
                     batchIndex.set(batchNumber, 1);
 
@@ -101,6 +100,7 @@ public class Likes {
             // The batch has been filled between we got the available batch and the transactino started
             // so we create a new one
             else {
+                post = datastore.get(KeyFactory.createKey("Post", postId));
                 ArrayList<Integer> batchIndex = (ArrayList<Integer>) post.getProperty("batchIndex");
                 Entity newBatch = new PostLikers().createEntity(post, batchIndex.size());
 
