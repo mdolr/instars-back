@@ -126,10 +126,7 @@ public class Follows {
 
             datastore.put(newBatch);
         }
-
-        // Count all available batches size + completed batches number * batch max size
-        followersCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE) - 1;
-        
+  
         txn.commit();
     } finally {
         if (txn.isActive()) {
@@ -161,6 +158,10 @@ public class Follows {
         target.setProperty("batchIndex", batchIndex);
         datastore.put(target);
     }
+
+    // Count all available batches size + completed batches number * batch max size
+    followersCount = availableBatches.getSizeCount()+(availableBatches.getFullBatchesCount() * Constants.MAX_BATCH_SIZE) - 1;
+      
 
     target.setProperty("hasFollowed", true);
 
