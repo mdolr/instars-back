@@ -6,3 +6,4 @@ target
 .classpath
 .project
 .factorypath
+signing-account.json

@@ -25,6 +25,7 @@ import java.util.*;
 public class Timeline {
     // A route to get timeline
     @ApiMethod(name = "users.getTimeline", httpMethod = "get", path = "timeline",
+            description="Returns the user's timeline with a given limit on the number of posts and possibly a cursor.",
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })

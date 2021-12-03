@@ -1,6 +1,8 @@
 # Instars
 
-_A backend that scales for a social network faster than light_
+_A scalable API Backend built on Google Datastore and Google App Engine_
+
+[Project frontend available here (separate repo)](https://github.com/mdolr/instars-front)
 
 # Installation
 
@@ -22,7 +24,7 @@ _A backend that scales for a social network faster than light_
 
 ### Service account
 
-Create a service account with the following permissions:
+Add the following permissions to a custom service account you created + your App Engine service account:
 
 - Service Account Token Creator
 - App Engine Admin
@@ -36,7 +38,21 @@ Once the account has been created, create a keypair and download it as a JSON fi
 
 ### OAuth2
 
-...
+Configurer l'écran de consentement OAuth, ajouter son e-mail en tant qu'utilisateur test.
+
+Créer une paire de credentials OAuth 2.0 avec les caractéristiques suivantes pour le champ URIs:
+
+- https://localhost
+- http://localhost
+- https://localhost:3000
+- http://localhost:3000
+- https://front-dot-{{YOUR_PROJECT_ID}}.oa.r.appspot.com
+- http://front-dot-{{YOUR_PROJECT_ID}}.oa.r.appspot.com
+
+Ajouter le Client ID dans les fichiers suivants:
+
+- `openapi.yaml` dans la propriété `x-google-audience`
+- `src/main/java/com/tinyinsta/common/Constants.java` dans la propriété `WEB_CLIENT_ID`
 
 ### Cloud storage Bucket CORS Configuration
 
@@ -126,6 +142,14 @@ gcloud endpoints services deploy target/openapi-docs/openapi.json
 - The app should scale and support contention and concurrent requests as much as possible
 
 ## Kinds
+
+Most of the properties on the kinds are self-explanatory. The only one that might be a bit complex and requires some explanation is "batchIndex".
+
+We're using the batchIndex to optimize our calculations of likes and followers, this index lets us keep track of which batch of UserFollower or PostLiker is full or not. Based on this and knowing the size of our batches we can easily determine the number of followers / likes of the respective entities without having to iterate over every batch.
+
+We can also quickly get a random batch which is not full to add new likes / new followers.
+
+We can create new batches dynamically based on contention while always keep a minimum of a given number of "available batches" (=non-full batches).
 
 ### Post
 

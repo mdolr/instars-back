@@ -19,6 +19,7 @@ import com.tinyinsta.dto.UserDTO;
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Follows {
     @ApiMethod(name = "follows.followById", httpMethod = "post", path = "follow/{targetId}",
+          description="Follow an other user and update follower count",
           clientIds = { Constants.WEB_CLIENT_ID },
           audiences = { Constants.WEB_CLIENT_ID },
           scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })

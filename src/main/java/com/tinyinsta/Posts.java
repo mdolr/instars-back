@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Posts {
-    @ApiMethod(name = "posts.getAll", httpMethod = "get", path = "posts")
+    @ApiMethod(name = "posts.getAll", description="Gets all posts for a given user ID", httpMethod = "get", path = "posts")
     public ArrayList<PostDTO> getAll(User reqUser, @Named("authorId") String authorId) throws EntityNotFoundException {
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
 
@@ -65,6 +65,7 @@ public class Posts {
     }
     
     @ApiMethod(name = "posts.uploadPost", httpMethod = "post", path = "posts",
+            description="Creates a non-published post in the database and returns a signed URL so the client can upload to Google Cloud Storage",
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
@@ -137,7 +138,7 @@ public class Posts {
         }
     }
 
-    @ApiMethod(name = "posts.publishPost", httpMethod = "post", path = "posts/{id}/publish",
+    @ApiMethod(name = "posts.publishPost", description="Verifies the existence of the file after upload and publishes the post to the user's followers", httpMethod = "post", path = "posts/{id}/publish",
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })

@@ -24,6 +24,7 @@ import java.util.Map;
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Users {
     @ApiMethod(name = "users.getSelf", httpMethod = "get", path = "users/me",
+            description="Returns the user's data and creates the user if needed",
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
@@ -128,6 +129,7 @@ public class Users {
     }
 
     @ApiMethod(name = "users.getRandom", httpMethod = "get", path = "users/explore",
+               description="Gets 10 random users",
                clientIds = { Constants.WEB_CLIENT_ID },
                audiences = { Constants.WEB_CLIENT_ID },
                scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
@@ -224,6 +226,7 @@ public class Users {
 
 
     @ApiMethod(name = "users.updateSelf", httpMethod = "put", path = "users/me",
+            description="Update the user's data",
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
@@ -262,7 +265,7 @@ public class Users {
     }
 
     // A route to get an user by its handle
-    @ApiMethod(name = "users.getUserByHandle", httpMethod = "get", path = "users/handle/{handle}")
+    @ApiMethod(name = "users.getUserByHandle", description="Gets the user profile given a handle", httpMethod = "get", path = "users/handle/{handle}")
     public UserDTO getUserByHandle(User reqUser, @Named("handle") String handle) throws NotFoundException, ConflictException {
         // Query the datastore to get the user by its handle
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
@@ -287,7 +290,7 @@ public class Users {
         return new UserDTO(resultUser, true, followersCount);
     }
 
-    @ApiMethod(name = "users.createFake", httpMethod = "post", path = "users/fake",
+    @ApiMethod(name = "users.createFake", description="Create fake users for testing purposes without Authorization tokens", httpMethod = "post", path = "users/fake",
         clientIds = { Constants.WEB_CLIENT_ID },
         audiences = { Constants.WEB_CLIENT_ID },
         scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })

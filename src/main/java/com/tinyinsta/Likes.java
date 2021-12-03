@@ -21,6 +21,7 @@ import com.tinyinsta.dto.PostDTO;
 @Api(name = "tinyinsta", version = "v1", scopes = { Constants.EMAIL_SCOPE }, clientIds = { Constants.WEB_CLIENT_ID })
 public class Likes {
    @ApiMethod(name = "likes.updateLikes", httpMethod = "post", path = "posts/{id}/likes",
+            description="Adds a like into a given post and returns the number of likes on it",
             clientIds = { Constants.WEB_CLIENT_ID },
             audiences = { Constants.WEB_CLIENT_ID },
             scopes = { Constants.EMAIL_SCOPE, Constants.PROFILE_SCOPE })
