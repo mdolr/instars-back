@@ -235,9 +235,16 @@ We have conducted the tests with varying batch sizes, the "Hit rate" describes t
 | 50 | 80-95 likes/s | 98% |
 | 25 | ~45 likes/s | 96% |
 
-The hit rate is under 100% with smaller batch sizes as the batch size limit is reached more often which leads to queries updating 2 entity groups at once happening more often.
+The hit rate is under 100% with smaller batch sizes as the batch size limit is reached more often which leads to queries updating 2 entity groups at once happening more often. We consider it a relatively small and acceptable error rate but it means there are errors nonetheless.
 
-We consider it a relatively small and acceptable error rate but it means there are errors nonetheless.
+As we've re-tested later to make sure our API still worked we have observed some cases where the hit rate would drop below 80% even with a 39000 `MAX_BATCH_SIZE` this could be improved by raising the minimum number of available buckets, the average likes per second stayed the same though.
+
+So in worst case scenario we could get results that look like this:
+| MAX_BATCH_SIZE | Average likes per second | Hit rate |
+|----------------|--------------------------|-----|
+| 39000 | ~50 likes/s | 80% |
+| 50 | 80-95 likes/s | 72% |
+| 25 | Not tested | Not tested |
 
 ## Timeline with varying pagination size
 

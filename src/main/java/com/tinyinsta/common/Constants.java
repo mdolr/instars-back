@@ -11,7 +11,7 @@ public class Constants {
   public static final String CLOUD_STORAGE_BUCKET_NAME =  "instars-23pnm1d4";
 
   public static final int MAX_BUCKETS_NUMBER = 5;
-  public static final int MAX_BATCH_SIZE = 39_000; //50;
+  public static final int MAX_BATCH_SIZE = 50; //39_000;
   public static final int PAGINATION_SIZE = 5;
   public static final int TIMELINE_BUCKETS = 5; // from 0 to 4 so 5 buckets
 
