@@ -4,6 +4,12 @@ _A scalable API Backend built on Google Datastore and Google App Engine_
 
 [Project frontend available here (separate repo)](https://github.com/mdolr/instars-front)
 
+Demo available here:
+
+- [Front](https://front-dot-tinyinsta-web.oa.r.appspot.com/)
+- [Direct API access](https://tinyinsta-web.oa.r.appspot.com/)
+- [API Endpoints portal](https://endpointsportal.tinyinsta-web.cloud.goog/docs/tinyinsta-web.appspot.com/1/introduction)
+
 # Installation
 
 ## Setup
@@ -220,7 +226,7 @@ _Diagram generated with [diagram.codes](https://www.diagram.codes/)_
 The goal here was to measure the throughput our system could handle on a single post. The likes per second load-testing was conducted using [Siege](https://github.com/JoeDog/siege) with the following settings:
 
 - Time duration: 30 seconds
-- Concurrent users: 255 users
+- Concurrent users: 200 users
 
 We have conducted the tests with varying batch sizes, the "Hit rate" describes the percentage of requests that did not receive a 5XX HTTP status code from the server.
 | MAX_BATCH_SIZE | Average likes per second | Hit rate |
@@ -268,3 +274,17 @@ In production we will probably want to use a pagination size ranging from 5 to 1
 
 - The average total time fluctuates around 500ms
 - The "Post" query has become significantly more time consuming
+
+## Possible improvements
+
+- Don't compute the number of likes and followers when a new likes / follower is added and only increment by 1 on the client side, the exact number of likes and followers will be returned once the user reloads the page
+- Raise the number of minimum available buckets and have a smarter way to create a lot of buckets in case of contention
+
+# Contributeurs
+
+|                                                    |                |
+| -------------------------------------------------- | -------------- |
+| [@mdolr](https://github.com/mdolr)                 | Maxime DOLORES |
+| [@jjbes](https://github.com/jjbes)                 | Julien AUBERT  |
+| [@NabilOulbaz](https://github.com/NabilOulbaz)     | Nabil OULBAZ   |
+| [@RobinPourtaud](https://github.com/RobinPourtaud) | Robin POURTAUD |
