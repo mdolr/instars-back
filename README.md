@@ -44,9 +44,8 @@ Once the account has been created, create a keypair and download it as a JSON fi
 
 ### OAuth2
 
-Configurer l'écran de consentement OAuth, ajouter son e-mail en tant qu'utilisateur test.
-
-Créer une paire de credentials OAuth 2.0 avec les caractéristiques suivantes pour le champ URIs:
+Configure the OAuth2 consent screen, add your e-mail as a test user.
+Then create a pair of Oauth2 credentials with the following URIs:
 
 - https://localhost
 - http://localhost
@@ -55,10 +54,10 @@ Créer une paire de credentials OAuth 2.0 avec les caractéristiques suivantes p
 - https://front-dot-{{YOUR_PROJECT_ID}}.oa.r.appspot.com
 - http://front-dot-{{YOUR_PROJECT_ID}}.oa.r.appspot.com
 
-Ajouter le Client ID dans les fichiers suivants:
+Add your Client ID in the following places:
 
-- `openapi.yaml` dans la propriété `x-google-audience`
-- `src/main/java/com/tinyinsta/common/Constants.java` dans la propriété `WEB_CLIENT_ID`
+- `openapi.yaml` as `x-google-audience`
+- `src/main/java/com/tinyinsta/common/Constants.java` as `WEB_CLIENT_ID`
 
 ### Cloud storage Bucket CORS Configuration
 
@@ -287,7 +286,7 @@ In production we will probably want to use a pagination size ranging from 5 to 1
 - Don't compute the number of likes and followers when a new likes / follower is added and only increment by 1 on the client side, the exact number of likes and followers will be returned once the user reloads the page
 - Raise the number of minimum available buckets and have a smarter way to create a lot of buckets in case of contention
 
-# Contributeurs
+# Contributors
 
 |                                                    |                |
 | -------------------------------------------------- | -------------- |
